@@ -40,3 +40,25 @@ void initKernelPT(){
 
 }
 
+// function to create the first page table record
+void initFirstPTRecord(){
+  struct pageTableRecord *pageTableRecord = malloc(sizeof(struct pageTableRecord));
+
+  void *pageBase = (void *)DOWN_TO_PAGE(VMEM_1_LIMIT - 1);
+
+  pageTableRecord->pageBase = pageBase;
+  pageTableRecord->isTopFull = 0;
+  pageTableRecord->isBottomFull = 0;
+  pageTableRecord->next = NULL;
+
+  unsigned int pfn = acquire_top_physical_page();
+
+  int virtualPageNum = (long)(page_base - VMEM_1_BASE)/PAGESIZE;
+
+  kernelPageTable[virtualPageNum].valid = 1;
+  kernelPageTable[virtualPageNum].pfn = pfn;
+
+  firstPageTableRecord = pageTableRecord;
+
+}
+

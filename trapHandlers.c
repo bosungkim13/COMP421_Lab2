@@ -21,94 +21,94 @@ void kernelTrapHandler(ExceptionStackFrame *frame) {
 
   switch (code) {
     case YALNIX_FORK:
-      TracePrintf(1, "trap_handlers: Fork requested.\n");
-      fork_trap_handler(frame);
+      TracePrintf(1, "trapHandlers: Fork requested.\n");
+      forkTrapHandler(frame);
       break;
     case YALNIX_EXEC:
-      TracePrintf(1, "trap_handlers: Exec requested.\n");
-      exec_trap_handler(frame);
+      TracePrintf(1, "trapHandlers: Exec requested.\n");
+      execTrapHandler(frame);
       break;
     case YALNIX_EXIT:
-      TracePrintf(1, "trap_handlers: Exit requested.\n");
-      exit_handler(frame, 0);
+      TracePrintf(1, "trapHandlers: Exit requested.\n");
+      exitHandler(frame, 0);
       break;
     case YALNIX_WAIT:
-      TracePrintf(1, "trap_handlers: Wait requested.\n");
-      wait_trap_handler(frame);
+      TracePrintf(1, "trapHandlers: Wait requested.\n");
+      waitTrapHandler(frame);
       break;
     case YALNIX_GETPID:
-      TracePrintf(1, "trap_handlers: GetPid requested.\n");
-      getpid_handler(frame);
+      TracePrintf(1, "trapHandlers: GetPid requested.\n");
+      getPidHandler(frame);
       break;
     case YALNIX_BRK:
-      TracePrintf(1, "trap_handlers: Brk requested.\n");
-      brk_handler(frame);
+      TracePrintf(1, "trapHandlers: Brk requested.\n");
+      brkHandler(frame);
       break;
     case YALNIX_DELAY:
-      TracePrintf(1, "trap_handlers: Delay requested.\n");
-      delay_handler(frame);
+      TracePrintf(1, "trapHandlers: Delay requested.\n");
+      delayHandler(frame);
       break;
     case YALNIX_TTY_READ:
-      TracePrintf(1, "trap_handlers: Tty Read requested.\n");
-      tty_read_handler(frame);
+      TracePrintf(1, "trapHandlers: Tty Read requested.\n");
+      ttyReadHandler(frame);
       break;
     case YALNIX_TTY_WRITE:
-      TracePrintf(1, "trap_handlers: Tty Write requested.\n");
-      tty_write_handler(frame);
+      TracePrintf(1, "trapHandlers: Tty Write requested.\n");
+      ttyWriteHandler(frame);
       break;
   }
 
 }
 
-void wait_trap_handler(ExceptionStackFrame *frame){
+void waitTrapHandler(ExceptionStackFrame *frame){
 
 }
 
-void exec_trap_handler(ExceptionStackFrame *frame){
+void execTrapHandler(ExceptionStackFrame *frame){
 
 }
 
-void fork_trap_handler(ExceptionStackFrame *frame){
+void forkTrapHandler(ExceptionStackFrame *frame){
 
 
 }
 
-void clock_trap_handler (ExceptionStackFrame *frame) {
+void clockTrapHandler (ExceptionStackFrame *frame) {
 
 }
 
-void illegal_trap_handler (ExceptionStackFrame *frame) {
+void illegalTrapHandler (ExceptionStackFrame *frame) {
 
 }
 
-void memory_trap_handler (ExceptionStackFrame *frame) {
+void memoryTrapHandler (ExceptionStackFrame *frame) {
 
 }
 
-void math_trap_handler (ExceptionStackFrame *frame) {
+void mathTrapHandler (ExceptionStackFrame *frame) {
 
 }
 
-void tty_recieve_trap_handler (ExceptionStackFrame *frame) {
-
-}
-
-void
-tty_transmit_trap_handler (ExceptionStackFrame *frame) {
+void ttyRecieveTrapHandler (ExceptionStackFrame *frame) {
 
 }
 
 void
-tty_read_handler(ExceptionStackFrame *frame) {
+ttyTransmitTrapHandler (ExceptionStackFrame *frame) {
 
 }
 
 void
-tty_write_handler(ExceptionStackFrame *frame) {
+ttyReadHandler(ExceptionStackFrame *frame) {
 
 }
 
-void getpid_handler(ExceptionStackFrame *frame) {
+void
+ttyWriteHandler(ExceptionStackFrame *frame) {
+
+}
+
+void getPidHandler(ExceptionStackFrame *frame) {
 
 }
 
@@ -119,15 +119,15 @@ void getpid_handler(ExceptionStackFrame *frame) {
  * 3. call select_next_process() to move the next process to be run to the head
  * 4. context switch from currently running process to that next process
  */
-void delay_handler(ExceptionStackFrame *frame) {
+void delayHandler(ExceptionStackFrame *frame) {
 
 }
 
-void exit_handler(ExceptionStackFrame *frame, int error) {
+void exitHandler(ExceptionStackFrame *frame, int error) {
 
 }
 
 void
-reset_time_till_switch() {
+resetTimeTillSwitch() {
   time_till_switch = SCHEDULE_DELAY;
 }

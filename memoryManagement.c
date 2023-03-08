@@ -3,7 +3,7 @@
 // Initialize integer array to keep track of page status (0 free, 1 used)
 int *isPhysicalPageOccupied = NULL;
 int numPhysicalPages;
-void *kernel_break = (void *)VNEM_1_BASE;
+void *kernel_break = (void *)VMEM_1_BASE;
 
 void initPhysicalPageArray(unsigned int pmem_size){
     // keep track of page status (0 free, 1 used)
@@ -34,3 +34,5 @@ void markPagesInRange(void *start, void *end){
         isPhysicalPageOccupied[i] = 1;
     }
 }
+
+
