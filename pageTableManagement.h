@@ -4,7 +4,7 @@
 
 //  each node of the linked list of free half physical pages to use when allocating memory for page tables.
 //  In order to ensure that page tables were physically contiguous in memory, we took advantage
-//  of the fact that a the size of a page table is PAGESIZE/2. These physical pages reside at
+//  of the fact that the size of a page table is PAGESIZE/2. These physical pages reside at
 //  the top of REGION_1.
 struct pageTableRecord{
     void *pageBase;
@@ -15,3 +15,5 @@ struct pageTableRecord{
 extern struct pte *kernelPageTable;
 
 void initKernelPT();
+struct pte* createPageTable();
+void prepPageTable(struct pte *pageTable);

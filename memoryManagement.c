@@ -35,4 +35,16 @@ void markPagesInRange(void *start, void *end){
     }
 }
 
+unsigned int
+getFreePhysicalPage(){
+    int i;
+    for (i = 0; i < numPhysicalPages; i++){
+        if (isPhysicalPageOccupied[i] == 0){
+            isPhysicalPageOccupied[i] = 1;
+            return i;
+        }
+    }
+    Halt();
+}
+
 

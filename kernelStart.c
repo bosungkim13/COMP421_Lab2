@@ -55,6 +55,13 @@ void KernelStart(ExceptionStackFrame *frame, unsigned int pnem_size, void *orig_
     // Initialize the kernel page table
     initKernelPT();
 
+    TracePrintf(2, "kernelStart: Kernel Page table has been initialized. Starting initialization of the first page table record");
+    initFirstPageTableRecord();
+    TracePrintf(2, "kernelStart: Initialization of the first page table record complete");
+
+    // Region 0 page table initialization and creating the idle process
+    struct processControlBlock *idlPCB = createNewProcess(IDLE_PID, ORPHAN_PARENT_PID);
+
 
 
 
