@@ -12,7 +12,7 @@ getFirstPageTableRecord(){
     return firstPageTableRecord;
 }
 
-void initKernelPT(){
+struct pte* initKernelPT(){
     TracePrintf(2, "pageTableManagement: Kernel page table initialization started.\n");
 
     kernelPageTable = malloc(PAGE_TABLE_SIZE);
@@ -37,6 +37,7 @@ void initKernelPT(){
         kernelPageTable[i].pfn = (long)VMEM_1_BASE / PAGESIZE + i;
     }
     TracePrintf(2, "pageTableManagement: Kernel page table initialized.\n");
+    return kernelPageTable;
 
 }
 

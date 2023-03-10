@@ -3,11 +3,12 @@
 #include <stdlib.h>
 #include "memoryManagement.h"
 #include "trapHandlers.h"
+#include <comp421/loadinfo.h>
 
 void **interruptVectorTable;
 int isInit = 1;
 
-void KernelStart(ExceptionStackFrame *frame, unsigned int pnem_size, void *orig_brk, char **cmd_args){
+void KernelStart(ExceptionInfo *frame, unsigned int pnem_size, void *orig_brk, char **cmd_args){
     TracePrintf(1, "kernelStart - start of KernelStart to create %d physical pages.\n", pmem_size/PAGESIZE);
 
     // Initialize linked list to keep track of free pages
@@ -50,17 +51,33 @@ void KernelStart(ExceptionStackFrame *frame, unsigned int pnem_size, void *orig_
     }
     // Point priveleged register to the trap interrupt table
     WriteRegister(REG_VECTOR_BASE, (RCS421RegValue) interruptVectorTable);
-    TracePrintf(2, "kernelStart: REG_VECTOR_BASE has been set to interrupt vector table");
+    TracePrintf(2, "kernelStart: REG_VECTOR_BASE has been set to interrupt vector table\n");
 
     // Initialize the kernel page table
-    initKernelPT();
+    struct pte* kernelTable = initKernelPT();
+    // set PTR1
+    WriteRegister(REG_PTR1, (RCS421RegVal)kernelTable);
 
-    TracePrintf(2, "kernelStart: Kernel Page table has been initialized. Starting initialization of the first page table record");
+    TracePrintf(2, "kernelStart: Kernel Page table has been initialized and set as PTR1. Starting initialization of the first page table record\n");
     initFirstPageTableRecord();
-    TracePrintf(2, "kernelStart: Initialization of the first page table record complete");
+    TracePrintf(2, "kernelStart: Initialization of the first page table record complete\n");
 
     // Region 0 page table initialization and creating the idle process
     struct processControlBlock *idlPCB = createNewProcess(IDLE_PID, ORPHAN_PARENT_PID);
+    // set PTR0
+    WriteRegister(REG_PTR0, (RCS421RegVal) idlePCB->pageTable);
+    TracePrintf(2, "kernelStart: Idle process created and PTR0 has been set\n");
+
+    WriteRegister(REG_VM_ENABLE, 1);
+    TracePrintf(2, "kernelStart: Virtual memory now enabled\n");
+
+    // TODO: need to implement LoadProgram and ContextSwitch
+    // load the idle process
+
+
+    // load the init process
+
+
 
 
 
