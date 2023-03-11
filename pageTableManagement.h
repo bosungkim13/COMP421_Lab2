@@ -17,3 +17,4 @@ extern struct pte *kernelPageTable;
 struct pte* initKernelPT();
 struct pte* createPageTable();
 void prepPageTable(struct pte *pageTable);
+void initFirstPTRecord();

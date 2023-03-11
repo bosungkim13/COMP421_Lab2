@@ -4,11 +4,14 @@
 #include "memoryManagement.h"
 #include "trapHandlers.h"
 #include <comp421/loadinfo.h>
+#include "processScheduling.h"
+#include "processControlBlock.h"
+#include "pageTableManagement.h"
 
 void **interruptVectorTable;
 int isInit = 1;
 
-void KernelStart(ExceptionInfo *frame, unsigned int pnem_size, void *orig_brk, char **cmd_args){
+void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, char **cmd_args){
     TracePrintf(1, "kernelStart - start of KernelStart to create %d physical pages.\n", pmem_size/PAGESIZE);
 
     // Initialize linked list to keep track of free pages
@@ -17,10 +20,10 @@ void KernelStart(ExceptionInfo *frame, unsigned int pnem_size, void *orig_brk, c
     TracePrintf(2, "kernelStart - Free physical page structure initialized with %d free physical pages.\n", freePhysicalPageCount());
 
     // Mark the kernel stack
-    markPagesInRange((void *)KERNEL_STACKBASE, (void *)KERNEL_STACK_LIMIT);
+    markPagesInRange((void *)KERNEL_STACK_BASE, (void *)KERNEL_STACK_LIMIT);
 
     // Create the interrupt vector table
-    interrupVectorTable = malloc(sizeof(void *) * TRAP_VECTOR_SIZE);
+    interruptVectorTable = malloc(sizeof(void *) * TRAP_VECTOR_SIZE);
     int i;
     for (i = 0; i < TRAP_VECTOR_SIZE; i++){
         switch(i){
@@ -40,7 +43,7 @@ void KernelStart(ExceptionInfo *frame, unsigned int pnem_size, void *orig_brk, c
                 interruptVectorTable[i] = mathTrapHandler;
                 break;
             case TRAP_TTY_RECEIVE:
-                interruptVectorTable[i] = ttyReceiveTrapHandler;
+                interruptVectorTable[i] = ttyRecieveTrapHandler;
                 break;
             case TRAP_TTY_TRANSMIT:
                 interruptVectorTable[i] = ttyTransmitTrapHandler;
@@ -50,7 +53,7 @@ void KernelStart(ExceptionInfo *frame, unsigned int pnem_size, void *orig_brk, c
         }
     }
     // Point priveleged register to the trap interrupt table
-    WriteRegister(REG_VECTOR_BASE, (RCS421RegValue) interruptVectorTable);
+    WriteRegister(REG_VECTOR_BASE, (RCS421RegVal) interruptVectorTable);
     TracePrintf(2, "kernelStart: REG_VECTOR_BASE has been set to interrupt vector table\n");
 
     // Initialize the kernel page table
@@ -59,11 +62,11 @@ void KernelStart(ExceptionInfo *frame, unsigned int pnem_size, void *orig_brk, c
     WriteRegister(REG_PTR1, (RCS421RegVal)kernelTable);
 
     TracePrintf(2, "kernelStart: Kernel Page table has been initialized and set as PTR1. Starting initialization of the first page table record\n");
-    initFirstPageTableRecord();
+    initFirstPTRecord();
     TracePrintf(2, "kernelStart: Initialization of the first page table record complete\n");
 
     // Region 0 page table initialization and creating the idle process
-    struct processControlBlock *idlPCB = createNewProcess(IDLE_PID, ORPHAN_PARENT_PID);
+    struct processControlBlock *idlePCB = createNewProcess(IDLE_PID, ORPHAN_PARENT_PID);
     // set PTR0
     WriteRegister(REG_PTR0, (RCS421RegVal) idlePCB->pageTable);
     TracePrintf(2, "kernelStart: Idle process created and PTR0 has been set\n");

@@ -1,5 +1,6 @@
 #include "processControlBlock.h"
 #include "pageTableManagement.h"
+#include "processScheduling.h"
 
 
 struct processControlBlock*

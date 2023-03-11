@@ -52,9 +52,9 @@ void initFirstPTRecord(){
   pageTableRecord->isBottomFull = 0;
   pageTableRecord->next = NULL;
 
-  unsigned int pfn = acquire_top_physical_page();
+  unsigned int pfn = getFreePhysicalPage();
 
-  int virtualPageNum = (long)(page_base - VMEM_1_BASE)/PAGESIZE;
+  int virtualPageNum = (long)(pageBase - VMEM_1_BASE)/PAGESIZE;
 
   kernelPageTable[virtualPageNum].valid = 1;
   kernelPageTable[virtualPageNum].pfn = pfn;
@@ -121,14 +121,14 @@ void prepPageTable(struct pte *pageTable){
     for(i = 0; i < PAGE_TABLE_LEN; i++) {
         if (i < KERNEL_STACK_BASE / PAGESIZE) {
             // non kernel stack pages
-            page_table[i].valid = 0;
-            page_table[i].kprot = PROT_READ | PROT_WRITE;
-            page_table[i].uprot = PROT_READ | PROT_WRITE | PROT_EXEC;
+            pageTable[i].valid = 0;
+            pageTable[i].kprot = PROT_READ | PROT_WRITE;
+            pageTable[i].uprot = PROT_READ | PROT_WRITE | PROT_EXEC;
         } else {
             // kernel stack pages
-            page_table[i].valid = 1;
-            page_table[i].kprot = PROT_READ | PROT_WRITE;
-            page_table[i].uprot = PROT_NONE;            
+            pageTable[i].valid = 1;
+            pageTable[i].kprot = PROT_READ | PROT_WRITE;
+            pageTable[i].uprot = PROT_NONE;            
         }
     }
     TracePrintf(2, "pageTableManagement: Done filling out page table.\n");

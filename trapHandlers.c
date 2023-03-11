@@ -2,19 +2,15 @@
 #include <stdio.h>
 #include "memoryManagement.h"
 
-void getpid_handler(ExceptionStackFrame *frame);
-void delay_handler(ExceptionStackFrame *frame);
-void exit_handler(ExceptionStackFrame *frame, int error);
-void fork_trap_handler(ExceptionStackFrame *frame);
-void wait_trap_handler(ExceptionStackFrame *frame);
-void exec_trap_handler(ExceptionStackFrame *frame);
-void tty_read_handler(ExceptionStackFrame *frame);
-void tty_write_handler(ExceptionStackFrame *frame);
-
 #define SCHEDULE_DELAY  2
 int time_till_switch = SCHEDULE_DELAY;
 
-void kernelTrapHandler(ExceptionStackFrame *frame) {
+int SetKernelBrk(void *addr){
+  // TODO
+  return 0;
+}
+
+void kernelTrapHandler(ExceptionInfo *frame) {
   TracePrintf(1, "trapHandlers: In TRAP_KERNEL interrupt handler...\n");
 
   int code = frame->code;
@@ -60,55 +56,55 @@ void kernelTrapHandler(ExceptionStackFrame *frame) {
 
 }
 
-void waitTrapHandler(ExceptionStackFrame *frame){
+void waitTrapHandler(ExceptionInfo *frame){
 
 }
 
-void execTrapHandler(ExceptionStackFrame *frame){
+void execTrapHandler(ExceptionInfo *frame){
 
 }
 
-void forkTrapHandler(ExceptionStackFrame *frame){
+void forkTrapHandler(ExceptionInfo *frame){
 
 
 }
 
-void clockTrapHandler (ExceptionStackFrame *frame) {
+void clockTrapHandler (ExceptionInfo *frame) {
 
 }
 
-void illegalTrapHandler (ExceptionStackFrame *frame) {
+void illegalTrapHandler (ExceptionInfo *frame) {
 
 }
 
-void memoryTrapHandler (ExceptionStackFrame *frame) {
+void memoryTrapHandler (ExceptionInfo *frame) {
 
 }
 
-void mathTrapHandler (ExceptionStackFrame *frame) {
+void mathTrapHandler (ExceptionInfo *frame) {
 
 }
 
-void ttyRecieveTrapHandler (ExceptionStackFrame *frame) {
-
-}
-
-void
-ttyTransmitTrapHandler (ExceptionStackFrame *frame) {
+void ttyRecieveTrapHandler (ExceptionInfo *frame) {
 
 }
 
 void
-ttyReadHandler(ExceptionStackFrame *frame) {
+ttyTransmitTrapHandler (ExceptionInfo *frame) {
 
 }
 
 void
-ttyWriteHandler(ExceptionStackFrame *frame) {
+ttyReadHandler(ExceptionInfo *frame) {
 
 }
 
-void getPidHandler(ExceptionStackFrame *frame) {
+void
+ttyWriteHandler(ExceptionInfo *frame) {
+
+}
+
+void getPidHandler(ExceptionInfo *frame) {
 
 }
 
@@ -119,11 +115,11 @@ void getPidHandler(ExceptionStackFrame *frame) {
  * 3. call select_next_process() to move the next process to be run to the head
  * 4. context switch from currently running process to that next process
  */
-void delayHandler(ExceptionStackFrame *frame) {
+void delayHandler(ExceptionInfo *frame) {
 
 }
 
-void exitHandler(ExceptionStackFrame *frame, int error) {
+void exitHandler(ExceptionInfo *frame, int error) {
 
 }
 

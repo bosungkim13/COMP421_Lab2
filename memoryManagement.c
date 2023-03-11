@@ -7,7 +7,7 @@
 // Initialize integer array to keep track of page status (0 free, 1 used)
 int *isPhysicalPageOccupied = NULL;
 int numPhysicalPages;
-void *kernelBreak = (void *)VMEM_1_BASE;
+void *kernelBrk = (void *)VMEM_1_BASE;
 
 void initPhysicalPageArray(unsigned int pmem_size){
     // keep track of page status (0 free, 1 used)
@@ -51,4 +51,8 @@ getFreePhysicalPage(){
     Halt();
 }
 
+
+void brkHandler(ExceptionInfo *frame){
+    // TODO
+}
 
