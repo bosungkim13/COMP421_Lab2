@@ -8,6 +8,7 @@
 int *isPhysicalPageOccupied = NULL;
 int numPhysicalPages;
 void *kernelBrk = (void *)VMEM_1_BASE;
+int isVMInitialized = 0;
 
 void initPhysicalPageArray(unsigned int pmem_size){
     // keep track of page status (0 free, 1 used)
@@ -39,6 +40,15 @@ void markPagesInRange(void *start, void *end){
     }
 }
 
+// moves the kernel break and marks the physical pages as taken in the free physical page 
+void markKernelPagesTo(void *end){
+    if(isPhysicalPageOccupied != NULL){
+        markPagesInRange(kernelBrk, end);
+    }
+    // move the kernelBrk up
+    kernelBrk = (void *)UP_TO_PAGE(end);
+}
+
 unsigned int
 getFreePhysicalPage(){
     int i;
@@ -54,5 +64,32 @@ getFreePhysicalPage(){
 
 void brkHandler(ExceptionInfo *frame){
     // TODO
+}
+
+int SetKernelBrk(void *addr) {
+    int i;
+    if (isVMInitialized) {
+        int numNeedPages = ((long)UP_TO_PAGE(addr) - (long)kernelBrk)/PAGESIZE;
+        if(freePhysicalPageCount() < numNeedPages){
+            return -1;
+        } else {
+            for (i = 0; i < numNeedPages; i++){
+                unsigned int physicalPageNum = getFreePhysicalPage();
+                int vpn = ((long)kernelBrk - VMEM_1_BASE)/PAGESIZE + i;
+
+               // set the kernel pte as valid and update the corresponding ppn
+                kernelPageTable[vpn].valid = 1;
+                kernelPageTable[vpn].pfn = physicalPageNum;
+            }
+        }
+    } else {
+        // SetKernelBrk should never be reallocate a page
+        if ((long)addr <= (long)kernelBrk - PAGESIZE) {
+            return -1;
+        }
+        markKernelPagesTo(addr);
+    }
+
+    return 0;
 }
 

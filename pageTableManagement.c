@@ -19,6 +19,7 @@ struct pte* initKernelPT(){
     
     int endHeap = ((long)kernelBrk - (long)VMEM_1_BASE) / PAGESIZE;
     int endText = ((long)&_etext - (long)VMEM_1_BASE) / PAGESIZE;
+    TracePrintf(2, "pageTableManagement: kernel heap ends at vpn: %d kernel text ends at vpn: %d.\n");
 
     int i;
     for (i = 0; i < PAGE_TABLE_LEN; i++){

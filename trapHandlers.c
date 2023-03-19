@@ -5,11 +5,6 @@
 #define SCHEDULE_DELAY  2
 int time_till_switch = SCHEDULE_DELAY;
 
-int SetKernelBrk(void *addr){
-  // TODO
-  return 0;
-}
-
 void kernelTrapHandler(ExceptionInfo *frame) {
   TracePrintf(1, "trapHandlers: In TRAP_KERNEL interrupt handler...\n");
 

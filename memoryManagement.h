@@ -10,3 +10,4 @@ int freePhysicalPageCount();
 void markPagesInRange(void *start, void *end);
 unsigned int getFreePhysicalPage();
 void brkHandler(ExceptionInfo *frame);
+void markKernelPagesTo(void *end);
