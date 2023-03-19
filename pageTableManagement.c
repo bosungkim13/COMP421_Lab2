@@ -116,10 +116,10 @@ createPageTable(){
     return newPageTable;
 }
 
-void prepPageTable(struct pte *pageTable){
-    TracePrintf(2, "pageTableManagement: Prepping page table at address %p\n", pageTable);
+void fillPageTable(struct pte *pageTable){
+    TracePrintf(2, "pageTableManagement: Filling page table at address %p\n", pageTable);
     int i;
-    for(i = 0; i < PAGE_TABLE_LEN; i++) {
+    for (i = 0; i < PAGE_TABLE_LEN; i++) {
         if (i < KERNEL_STACK_BASE / PAGESIZE) {
             // non kernel stack pages
             pageTable[i].valid = 0;
@@ -133,5 +133,29 @@ void prepPageTable(struct pte *pageTable){
         }
     }
     TracePrintf(2, "pageTableManagement: Done filling out page table.\n");
+}
+
+void fillInitialPageTable(struct pte *pageTable){
+    int i;
+
+    TracePrintf(2, "pageTableManagement: Begin filling initial page table at address %p.\n", pageTable);
+    
+    for (i = 0; i < PAGE_TABLE_LEN; i++) {
+        if (i >= KERNEL_STACK_BASE / PAGESIZE) {
+            // kernel stack pages
+            pageTable[i].valid = 1;
+            pageTable[i].kprot = PROT_READ | PROT_WRITE;
+            pageTable[i].uprot = PROT_NONE;
+        } else {
+            // non kernel stack pages
+            pageTable[i].valid = 0;
+            pageTable[i].kprot = PROT_NONE;
+            pageTable[i].uprot = PROT_READ | PROT_WRITE | PROT_EXEC;
+        }
+        // set the pfn
+        pageTable[i].pfn = i;
+    }
+    TracePrintf(2, "pageTableManagement: Initial page table initialized.\n");
+
 }
 

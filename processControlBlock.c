@@ -15,6 +15,11 @@ createNewProcess(int pid, int parentPid){
     pcb -> numChildren = 0;
     
     addToSchedule(pcb);
-    prepPageTable(pcb->pageTable);
+    if (pid == IDLE_PID){
+        fillInitialPageTable(pcb->pageTable);
+    }else{
+        fillPageTable(pcb->pageTable);
+    }
+    
     return pcb;
 }
