@@ -13,8 +13,9 @@ int isInit = 1;
 
 void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, char **cmd_args){
     TracePrintf(1, "kernelStart - start of KernelStart to create %d physical pages.\n", pmem_size/PAGESIZE);
-
-    // Initialize linked list to keep track of free pages
+    
+    initKernelBrk(orig_brk);
+    // Initialize list to keep track of free pages
     initPhysicalPageArray(pmem_size);
 
     TracePrintf(2, "kernelStart - Free physical page structure initialized with %d free physical pages.\n", freePhysicalPageCount());

@@ -5,6 +5,7 @@
 
 extern void *kernelBrk;
 
+void initKernelBrk(void *orig_brk);
 void initPhysicalPageArray(unsigned int pmem_size);
 int freePhysicalPageCount();
 void markPagesInRange(void *start, void *end);

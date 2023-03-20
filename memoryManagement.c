@@ -10,6 +10,10 @@ int numPhysicalPages;
 void *kernelBrk = (void *)VMEM_1_BASE;
 int isVMInitialized = 0;
 
+void initKernelBrk(void *orig_brk){
+	kernelBrk = orig_brk;
+}
+
 void initPhysicalPageArray(unsigned int pmem_size){
     // keep track of page status (0 free, 1 used)
     numPhysicalPages = pmem_size/PAGESIZE;

@@ -1,3 +1,6 @@
 .vs/*
 .vscode/*
 *.o
+idle
+yalnix
+*.*~
