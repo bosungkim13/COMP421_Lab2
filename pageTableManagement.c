@@ -17,7 +17,7 @@ struct pte* initKernelPT(){
 
     kernelPageTable = malloc(PAGE_TABLE_SIZE);
     
-    int endHeap = ((long)kernelBrk - (long)VMEM_1_BASE) / PAGESIZE;
+    int endHeap = UP_TO_PAGE((long)kernelBrk - (long)VMEM_1_BASE) / PAGESIZE;
     int endText = ((long)&_etext - (long)VMEM_1_BASE) / PAGESIZE;
     TracePrintf(2, "pageTableManagement: kernel heap ends at vpn: %d kernel text ends at vpn: %d.\n");
 
@@ -27,7 +27,7 @@ struct pte* initKernelPT(){
         if (i < endText){
             kernelPageTable[i].valid = 1;
             kernelPageTable[i].kprot = PROT_READ | PROT_EXEC;
-        }else if (i <= endHeap){
+        }else if (i < endHeap){
             kernelPageTable[i].valid = 1;
             kernelPageTable[i].kprot = PROT_READ | PROT_WRITE;
         } else{

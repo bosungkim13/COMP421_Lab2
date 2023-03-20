@@ -42,6 +42,11 @@ void markPagesInRange(void *start, void *end){
     for (i = begin; i < limit; i++){
         isPhysicalPageOccupied[i] = 1;
     }
+    TracePrintf(1, "memoryManagement - markPagesInRange - Marking pages [%d, %d)\n", begin, limit);
+    TracePrintf(1, "memoryManagement - markPagesInRange - Current page marking:\n");
+    for(i = 0; i < numPhysicalPages; i++){
+    	TracePrintf(1, "Pfn %d has marking %d\n", i, isPhysicalPageOccupied[i]);
+    }
 }
 
 // moves the kernel break and marks the physical pages as taken in the free physical page 
@@ -59,12 +64,16 @@ getFreePhysicalPage(){
     for (i = 0; i < numPhysicalPages; i++){
         if (isPhysicalPageOccupied[i] == 0){
             isPhysicalPageOccupied[i] = 1;
+            TracePrintf(1, "GetFreePhysicalPage - Providing physical page %d\n", i);
             return i;
         }
     }
     Halt();
 }
 
+void freePhysicalPage(unsigned int pfn){
+	isPhysicalPageOccupied[pfn] = 0;
+}
 
 void brkHandler(ExceptionInfo *frame){
     // TODO
@@ -85,6 +94,7 @@ int SetKernelBrk(void *addr) {
                 kernelPageTable[vpn].valid = 1;
                 kernelPageTable[vpn].pfn = physicalPageNum;
             }
+            markKernelPagesTo(addr);
         }
     } else {
         // SetKernelBrk should never be reallocate a page

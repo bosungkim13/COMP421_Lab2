@@ -3,8 +3,10 @@
 
 int main(){
 	printf("Starting idle process initialization\n");
+	int i = 0;
 	while(1){
-		Pause();
+		printf("Running idle process: i = %d", i);
+		//Pause();
 	}
 }
 

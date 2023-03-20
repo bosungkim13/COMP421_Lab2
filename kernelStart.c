@@ -5,8 +5,9 @@
 #include "trapHandlers.h"
 #include <comp421/loadinfo.h>
 #include "processScheduling.h"
-#include "processControlBlock.h"
 #include "pageTableManagement.h"
+#include "processControlBlock.h"
+#include "loadProgram.h"
 
 void **interruptVectorTable;
 int isInit = 1;
@@ -77,6 +78,13 @@ void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, c
 
     // TODO: need to implement LoadProgram and ContextSwitch
     // load the idle process
+    char** idleArgs = malloc(sizeof(char*) * 2);
+    idleArgs[0] = "idle";
+    idleArgs[1] = NULL;
+    
+    if(LoadProgram("idle", idleArgs, 0, freePhysicalPageCount(), frame, idlePCB) < 0){
+	Halt();
+    }
 
 
     // load the init process

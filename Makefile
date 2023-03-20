@@ -33,8 +33,8 @@ ALL = yalnix idle
 #	make up your kernel, and KERNEL_SRCS should  be a list of
 #	the corresponding source files that make up your kernel.
 #
-KERNEL_OBJS = kernelStart.o memoryManagement.o pageTableManagement.o processControlBlock.o processScheduling.o trapHandlers.o
-KERNEL_SRCS = kernelStart.c memoryManagement.c pageTableManagement.c processControlBlock.c processScheduling.c trapHandlers.c
+KERNEL_OBJS = kernelStart.o memoryManagement.o pageTableManagement.o processControlBlock.o processScheduling.o trapHandlers.o loadProgram.o
+KERNEL_SRCS = kernelStart.c memoryManagement.c pageTableManagement.c processControlBlock.c processScheduling.c trapHandlers.c loadProgram.c
 
 #
 #	You should not have to modify anything else in this Makefile
