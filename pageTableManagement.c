@@ -47,6 +47,7 @@ void initFirstPTRecord(){
   struct pageTableRecord *pageTableRecord = malloc(sizeof(struct pageTableRecord));
 
   void *pageBase = (void *)DOWN_TO_PAGE(VMEM_1_LIMIT - 1);
+  markPagesInRange((void*)(VMEM_1_LIMIT - 1), (void*)(VMEM_1_LIMIT - 1));
 
   pageTableRecord->pageBase = pageBase;
   pageTableRecord->isTopFull = 0;
@@ -58,7 +59,7 @@ void initFirstPTRecord(){
   int virtualPageNum = (long)(pageBase - VMEM_1_BASE)/PAGESIZE;
 
   kernelPageTable[virtualPageNum].valid = 1;
-  kernelPageTable[virtualPageNum].pfn = pfn;
+  kernelPageTable[virtualPageNum].pfn = 1023;//pfn;
 
   firstPageTableRecord = pageTableRecord;
 

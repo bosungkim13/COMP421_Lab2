@@ -82,16 +82,14 @@ void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, c
     idleArgs[0] = "idle";
     idleArgs[1] = NULL;
     
+    TracePrintf(2, "kernelStart: Starting to load idle program");
     if(LoadProgram("idle", idleArgs, 0, freePhysicalPageCount(), frame, idlePCB) < 0){
 	Halt();
     }
+    TracePrintf(2, "kernelStart: Loaded idle program");
 
 
     // load the init process
-
-
-
-
 
 
 }

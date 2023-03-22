@@ -189,12 +189,15 @@ LoadProgram(char *name, char **args, int physicalPagesUsedPreviously, int otherF
     >>>> memory page indicated by that PTE's pfn field.  Set all
     >>>> of these PTEs to be no longer valid.
     */
-    for(i = 0; i < KERNEL_STACK_BASE; i++){
+    TracePrintf(2, "loadProgram: Starting to free previous physical pages\n");
+    for(i = 0; i < KERNEL_STACK_BASE/PAGESIZE; i++){
+    	//TracePrintf(2, "loadProgram: Free previous pages: i = %d\n", i);
     	if(pcb->pageTable[i].valid == 1){
     		pcb->pageTable[i].valid = 0;
     		freePhysicalPage(pcb->pageTable[i].pfn);
     	}
     }
+    TracePrintf(2, "loadProgram: Finished freeing previous physical pages\n");
 
     /*
      *  Fill in the page table with the right number of text,
@@ -209,6 +212,7 @@ LoadProgram(char *name, char **args, int physicalPagesUsedPreviously, int otherF
     >>>> Region 0 page table unused (and thus invalid)
     */
     int nextPTE = MEM_INVALID_PAGES;
+    TracePrintf(2, "loadProgram: Starting to setup user process page tables from text pages\n");
 
     /* First, the text pages */
     /*
@@ -220,11 +224,13 @@ LoadProgram(char *name, char **args, int physicalPagesUsedPreviously, int otherF
     >>>>     pfn   = a new page of physical memory
     */
     for(; nextPTE < MEM_INVALID_PAGES + text_npg; nextPTE++){
+    	TracePrintf(2, "loadProgram: userTextPages: nextPTE = %d\n", nextPTE);
     	pcb->pageTable[nextPTE].valid = 1;
     	pcb->pageTable[nextPTE].kprot = PROT_READ | PROT_WRITE;
     	pcb->pageTable[nextPTE].uprot = PROT_READ | PROT_EXEC;
     	pcb->pageTable[nextPTE].pfn = getFreePhysicalPage();
     }
+    TracePrintf(2, "loadProgram: Finished setting up text pages. Starting data/bss pages\n");
 
     /* Then the data and bss pages */
     /*
@@ -236,11 +242,13 @@ LoadProgram(char *name, char **args, int physicalPagesUsedPreviously, int otherF
     >>>>     pfn   = a new page of physical memory
     */
     for(; nextPTE < MEM_INVALID_PAGES + text_npg + data_bss_npg; nextPTE++){
+    	TracePrintf(2, "loadProgram: userDataBSSPages: nextPTE = %d\n", nextPTE);
     	pcb->pageTable[nextPTE].valid = 1;
     	pcb->pageTable[nextPTE].kprot = PROT_READ | PROT_WRITE;
     	pcb->pageTable[nextPTE].uprot = PROT_READ | PROT_WRITE;
     	pcb->pageTable[nextPTE].pfn = getFreePhysicalPage();
     }
+    TracePrintf(2, "loadProgram: Finished setting up data/bss pages. Starting user stack pages\n");
 
     /* And finally the user stack pages */
     /*
@@ -253,12 +261,14 @@ LoadProgram(char *name, char **args, int physicalPagesUsedPreviously, int otherF
     >>>>     uprot = PROT_READ | PROT_WRITE
     >>>>     pfn   = a new page of physical memory
     */
-    for(nextPTE = USER_STACK_LIMIT - stack_npg; nextPTE < USER_STACK_LIMIT; nextPTE++){
+    for(nextPTE = USER_STACK_LIMIT/PAGESIZE - stack_npg; nextPTE < USER_STACK_LIMIT/PAGESIZE; nextPTE++){
+    	TracePrintf(2, "loadProgram: userStackPages: nextPTE = %d\n", nextPTE);
     	pcb->pageTable[nextPTE].valid = 1;
     	pcb->pageTable[nextPTE].kprot = PROT_READ | PROT_WRITE;
     	pcb->pageTable[nextPTE].uprot = PROT_READ | PROT_WRITE;
     	pcb->pageTable[nextPTE].pfn = getFreePhysicalPage();
     }
+    TracePrintf(2, "loadProgram: Finished setting up stack pages, the last part of the user page table.\n");
 
     /*
      *  All pages for the new address space are now in place.  Flush
@@ -266,6 +276,7 @@ LoadProgram(char *name, char **args, int physicalPagesUsedPreviously, int otherF
      *  we'll be able to do the read() into the new pages below.
      */
     WriteRegister(REG_TLB_FLUSH, TLB_FLUSH_0);
+    TracePrintf(2, "loadProgram: Flushed the TLB for the first time.\n");
 
     /*
      *  Read the text and data from the file into memory.
@@ -285,6 +296,7 @@ LoadProgram(char *name, char **args, int physicalPagesUsedPreviously, int otherF
     }
 
     close(fd);			/* we've read it all now */
+    TracePrintf(2, "loadProgram: Read the program into the text and data area.\n");
 
     /*
      *  Now set the page table entries for the program text to be readable
@@ -299,6 +311,7 @@ LoadProgram(char *name, char **args, int physicalPagesUsedPreviously, int otherF
     }
 
     WriteRegister(REG_TLB_FLUSH, TLB_FLUSH_0);
+    TracePrintf(2, "loadProgram: Flushed the TLB for the second time.\n");
 
     /*
      *  Zero out the bss
@@ -311,6 +324,7 @@ LoadProgram(char *name, char **args, int physicalPagesUsedPreviously, int otherF
      */
     //>>>> Initialize pc for the current process to (void *)li.entry
     programExceptionInfo->pc = (void*)li.entry;
+    TracePrintf(2, "loadProgram: Set up the pc for the loaded process\n");
 
     /*
      *  Now, finally, build the argument list on the new stack.
@@ -343,6 +357,7 @@ LoadProgram(char *name, char **args, int physicalPagesUsedPreviously, int otherF
     for(i = 0; i < NUM_REGS; i++){
     	programExceptionInfo->regs[i] = 0;
     }
+    TracePrintf(2, "loadProcess: Finished everything\n");
 
     return (0);
 }
