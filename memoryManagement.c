@@ -62,7 +62,7 @@ void markKernelPagesTo(void *end){
 unsigned int
 getFreePhysicalPage(){
     int i;
-    for (i = 16; i < numPhysicalPages; i++){
+    for (i = (isVMInitialized ? 0 : MEM_INVALID_PAGES); i < numPhysicalPages; i++){
         if (isPhysicalPageOccupied[i] == 0){
             isPhysicalPageOccupied[i] = 1;
             TracePrintf(1, "GetFreePhysicalPage - Providing physical page %d\n", i);
