@@ -82,15 +82,16 @@ void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, c
 
     // TODO: need to implement LoadProgram and ContextSwitch
     // load the idle process
-    char *loadargs[1];
-    loadargs[0] = NULL;
+    char *loadargs[2];
+    loadargs[0] = "idle";
+    loadargs[1] = NULL;
     
-    TracePrintf(2, "kernelStart: Starting to load idle program");
+    TracePrintf(2, "kernelStart: Starting to load idle program\n");
 //    if(LoadProgram("idle", idleArgs, 0, freePhysicalPageCount(), frame, idlePCB) < 0){
 //	Halt();
 //    }
     LoadProgram("idle", loadargs, frame, idlePCB);
-    TracePrintf(2, "kernelStart: Loaded idle program");
+    TracePrintf(2, "kernelStart: Loaded idle program\n");
 
     ContextSwitch(idleInitFunc, &idlePCB->savedContext, (void*)idlePCB, (void*)initPCB);
 
@@ -102,7 +103,9 @@ void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, c
             LoadProgram(cmd_args[0], cmd_args, frame, initPCB);
         }
         else{
-            LoadProgram("init", loadargs, frame, initPCB);
+            loadargs[0] = "init";
+            loadargs[1] = NULL;
+            LoadProgram(loadargs[0], loadargs, frame, initPCB);
         }
     }
 

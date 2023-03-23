@@ -70,7 +70,7 @@ createPageTable(){
 
     TracePrintf(3, "pageTableManagement: Started creating page table");
     struct pageTableRecord *current = getFirstPageTableRecord();
-    while (current != NULL){
+    while (1){
         if (current->isTopFull == 0){
             struct pte *newPT = (struct pte*) ((long)current->pageBase + PAGE_TABLE_SIZE);
             current -> isTopFull = 1;
@@ -82,38 +82,44 @@ createPageTable(){
             TracePrintf(3, "pageTableManagement: Used bottom of page to create Page Table");
             return newPT;
         }else{
-            current = current->next;
+            if(current->next != NULL){
+                current = current->next;
+            }else{
+                // current is not null, current->next is null
+                // we need to keep current so that when we malloc a new pageTableRecord
+                // we can set the next pointer in current to the malloced struct
+                break;
+            }
         }
     }
     TracePrintf(3, "pageTableManagement: No space in current page table records... creating new page table record");
-    // creating new page table record entry
-
-    // find the end
-    while (current->next != NULL) {
-        current = current->next;
-    }
+    // creating new page table record entry, then giving the top half as the new page table
 
     struct pageTableRecord *newPTRecord = malloc(sizeof(struct pageTableRecord));
+    if(newPTRecord == NULL){
+    	TracePrintf(2, "Kernel failed malloc for new pageTableRecord, halting ...");
+    	Halt();
+    }
 
-    void *pageBase = (void *)DOWN_TO_PAGE((long)current->pageBase - 1);
+    long pfn = getFreePhysicalPage();
+    void *pageBase = (void*)(pfn * PAGESIZE);
 
     newPTRecord->pageBase = pageBase;
     newPTRecord->isTopFull = 1;
     newPTRecord->isBottomFull = 0;
     newPTRecord->next = NULL;
 
-
-    int vpn = (long)(pageBase - VMEM_1_BASE)/PAGESIZE;
+    int vpn = 1023;
+    for(; vpn >= VMEM_1_BASE/PAGESIZE && kernelPageTable[vpn].valid == 1; vpn--){}
+    if(vpn == (VMEM_0_LIMIT-1)/PAGESIZE){
+    	TracePrintf(2, "Kernel failed finding an invalid vpn in the kernel pt to use for accessing the new pageTableRecord, halting ...");
+    	Halt();
+    }
     kernelPageTable[vpn].valid = 1;
-    
-    unsigned int pfn = getFreePhysicalPage();
     kernelPageTable[vpn].pfn = pfn;
-
     current->next = newPTRecord;
 
     struct pte *newPageTable = (struct pte *)((long)pageBase + PAGE_TABLE_SIZE);
-
-    // return the top half of page table
     return newPageTable;
 }
 
@@ -130,7 +136,8 @@ void fillPageTable(struct pte *pageTable){
             // kernel stack pages
             pageTable[i].valid = 1;
             pageTable[i].kprot = PROT_READ | PROT_WRITE;
-            pageTable[i].uprot = PROT_NONE;            
+            pageTable[i].uprot = PROT_NONE;
+            pageTable[i].pfn = i;
         }
     }
     TracePrintf(2, "pageTableManagement: Done filling out page table.\n");

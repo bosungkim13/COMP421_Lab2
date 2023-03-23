@@ -8,9 +8,10 @@ int
 main() {
     printf("Init Process Initialized.\n");
 	int i = 100;
-	while(1){
+	while(i >= 0){
 		printf("Running init process: i = %d\n", i);
 		i--;
 		//Pause();
 	}
+	return 0;
 }
