@@ -106,8 +106,8 @@ void getPidHandler(ExceptionInfo *frame) {
 /*
  * Process:
  * 1. Set the delay inside the current process's pcb
- * 2. call move_head_to_tail() to move current process to the end of the schedule
- * 3. call select_next_process() to move the next process to be run to the head
+ * 2. move current process to the end of the schedule
+ * 3. move the next process to be run to the head
  * 4. context switch from currently running process to that next process
  */
 void delayHandler(ExceptionInfo *frame) {

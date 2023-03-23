@@ -3,4 +3,4 @@
 
 SavedContext* mySwitchFunc(SavedContext *ctxp, void* p1, void* p2);
 SavedContext* idleInitFunc(SavedContext *ctxp, void* p1, void* p2);
-SavedContext *forkFunc(SavedContext *ctxp, void* p1, void* p2);
+SavedContext* forkFunc(SavedContext *ctxp, void* p1, void* p2);

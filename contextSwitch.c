@@ -1,6 +1,7 @@
 #include "processControlBlock.h"
 #include "memoryManagement.h"
 #include "pageTableManagement.h"
+#include "contextSwitch.h"
 
 SavedContext* mySwitchFunc(SavedContext *ctxp, void *p1, void *p2){
     struct processControlBlock *pcbTo = (struct processControlBlock *)p2;
@@ -67,5 +68,5 @@ SavedContext* idleInitFunc(SavedContext *ctxp, void* p1, void* p2){
 
     TracePrintf(1, "context_switch: idle_and_init_initialization completed.\n");
 
-    return &pcbFrom->saved_context;  
+    return &pcbFrom->savedContext;  
 }
