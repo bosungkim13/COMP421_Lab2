@@ -14,3 +14,7 @@ addToSchedule(struct processControlBlock *pcb){
     newNode->pcb = pcb;
     head = newNode;
 }
+
+struct scheduleNode* getHead(){
+    return head;
+}

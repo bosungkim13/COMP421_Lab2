@@ -1,1 +1,1 @@
-int LoadProgram(char* name, char** args, int physicalPagesUsedPreviously, int otherFreePhysicalPages, ExceptionInfo* programExceptionInfo, struct processControlBlock* pcb);
+int LoadProgram(char* name, char** args, ExceptionInfo* programExceptionInfo, struct processControlBlock* pcb);

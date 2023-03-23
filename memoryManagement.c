@@ -10,8 +10,8 @@ int numPhysicalPages;
 void *kernelBrk = (void *)VMEM_1_BASE;
 int isVMInitialized = 0;
 
-void initKernelBrk(void *orig_brk){
-	kernelBrk = orig_brk;
+void initKernelBrk(void *origBrk){
+	kernelBrk = origBrk;
 }
 
 void initPhysicalPageArray(unsigned int pmem_size){
@@ -19,7 +19,7 @@ void initPhysicalPageArray(unsigned int pmem_size){
     numPhysicalPages = pmem_size/PAGESIZE;
     isPhysicalPageOccupied = malloc(numPhysicalPages * sizeof(int));
     memset(isPhysicalPageOccupied, 0, numPhysicalPages);
-    markPagesInRange((void*)VMEM_1_BASE, kernelBrk);
+    //markPagesInRange((void*)VMEM_1_BASE, kernelBrk);
 }
 // helper function to return number of free phyical pages
 int freePhysicalPageCount(){
@@ -62,7 +62,7 @@ void markKernelPagesTo(void *end){
 unsigned int
 getFreePhysicalPage(){
     int i;
-    for (i = 16; i < numPhysicalPages; i++){
+    for (i = 0; i < numPhysicalPages; i++){
         if (isPhysicalPageOccupied[i] == 0){
             isPhysicalPageOccupied[i] = 1;
             TracePrintf(1, "GetFreePhysicalPage - Providing physical page %d\n", i);
@@ -70,6 +70,12 @@ getFreePhysicalPage(){
         }
     }
     Halt();
+}
+
+unsigned int getTopFreePhysicalPage(){
+    int pfn = DOWN_TO_PAGE(VMEM_1_LIMIT - 1) / PAGESIZE;
+    isPhysicalPageOccupied[pfn] = 1;
+    return pfn;
 }
 
 void freePhysicalPage(unsigned int pfn){
@@ -106,5 +112,23 @@ int SetKernelBrk(void *addr) {
     }
 
     return 0;
+}
+
+void* virtualToPhysicalAddr(void *va){
+    int pfn;
+    void* vPageBase = (void*)DOWN_TO_PAGE(va);
+    void* pPageBase;
+
+    if (vPageBase < (void*)VMEM_1_BASE){
+        struct scheduleNode *currentNode = getHead();
+        pfn = currentNode->pcb->pageTable[((long)vPageBase) / PAGESIZE].pfn;
+    }
+    else{
+        pfn = kernelPageTable[((long)vPageBase - VMEM_1_BASE) / PAGESIZE].pfn;
+    }
+    pPageBase = (void*) (long)(pfn*PAGESIZE);
+
+    //offset is equivalent to va & PAGEOFFSET
+    return (void*)((long)pPageBase + ((long)va & PAGEOFFSET));
 }
 

@@ -13,3 +13,4 @@ struct scheduleNode {
 };
 
 void addToSchedule(struct processControlBlock *pcb);
+struct scheduleNode* getHead();

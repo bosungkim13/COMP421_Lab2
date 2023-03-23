@@ -18,6 +18,7 @@
 #include "memoryManagement.h"
 #include "processControlBlock.h"
 #include "loadProgram.h"
+#include "pageTableManagement.h"
 
 /*
  *  Load a program into the current process's address space.  The
@@ -40,7 +41,7 @@
  *  in this case.
  */
 int
-LoadProgram(char *name, char **args, int physicalPagesUsedPreviously, int otherFreePhysicalPages, ExceptionInfo* programExceptionInfo, struct processControlBlock* pcb)
+LoadProgram(char *name, char **args, ExceptionInfo* programExceptionInfo, struct processControlBlock* pcb)
 {
     int fd;
     int status;
@@ -159,14 +160,14 @@ LoadProgram(char *name, char **args, int physicalPagesUsedPreviously, int otherF
     >>>> the new program being loaded.
     if (>>>> not enough free physical memory) {
     */
-    if ((text_npg + data_bss_npg + stack_npg) >
-	(physicalPagesUsedPreviously + otherFreePhysicalPages)){
-	TracePrintf(0,
-	    "LoadProgram: program '%s' size too large for PHYSICAL memory\n",
-	    name);
-	free(argbuf);
-	close(fd);
-	return (-1);
+
+    int requiredFreePhysicalPages = text_npg + data_bss_npg + stack_npg - numPagesInUse(pcb->pageTable);
+
+    if (freePhysicalPageCount() < requiredFreePhysicalPages) {
+      TracePrintf(0, "LoadProgram: program '%s' size too large for physical memory\n", name);
+      free(argbuf);
+      close(fd);
+      return (-1);
     }
 
     /*

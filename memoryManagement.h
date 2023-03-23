@@ -5,11 +5,13 @@
 
 extern void *kernelBrk;
 
-void initKernelBrk(void *orig_brk);
+void initKernelBrk(void *origBrk);
 void initPhysicalPageArray(unsigned int pmem_size);
 int freePhysicalPageCount();
 void markPagesInRange(void *start, void *end);
 unsigned int getFreePhysicalPage();
+unsigned int getTopFreePhysicalPage();
 void freePhysicalPage(unsigned int pfn);
 void brkHandler(ExceptionInfo *frame);
 void markKernelPagesTo(void *end);
+void * virtualToPhysicalAddr(void * va);

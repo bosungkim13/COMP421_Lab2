@@ -47,19 +47,19 @@ void initFirstPTRecord(){
   struct pageTableRecord *pageTableRecord = malloc(sizeof(struct pageTableRecord));
 
   void *pageBase = (void *)DOWN_TO_PAGE(VMEM_1_LIMIT - 1);
-  markPagesInRange((void*)(VMEM_1_LIMIT - 1), (void*)(VMEM_1_LIMIT - 1));
+  //markPagesInRange((void*)(VMEM_1_LIMIT - 1), (void*)(VMEM_1_LIMIT - 1));
 
   pageTableRecord->pageBase = pageBase;
   pageTableRecord->isTopFull = 0;
   pageTableRecord->isBottomFull = 0;
   pageTableRecord->next = NULL;
 
-  unsigned int pfn = getFreePhysicalPage();
+  unsigned int pfn = getTopFreePhysicalPage();
 
   int virtualPageNum = (long)(pageBase - VMEM_1_BASE)/PAGESIZE;
 
   kernelPageTable[virtualPageNum].valid = 1;
-  kernelPageTable[virtualPageNum].pfn = 1023;//pfn;
+  kernelPageTable[virtualPageNum].pfn = pfn;
 
   firstPageTableRecord = pageTableRecord;
 
@@ -159,4 +159,16 @@ void fillInitialPageTable(struct pte *pageTable){
     TracePrintf(2, "pageTableManagement: Initial page table initialized.\n");
 
 }
+
+int numPagesInUse(struct pte *pageTable){
+    int i;
+    int count = 0;
+    for(i = 0; i < PAGE_TABLE_LEN - KERNEL_STACK_PAGES; i++){
+        if(pageTable[i].valid == 1){
+        count++;
+        }
+    }
+    return count;
+}
+
 

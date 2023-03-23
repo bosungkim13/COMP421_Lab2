@@ -19,3 +19,4 @@ struct pte* createPageTable();
 void fillPageTable(struct pte *pageTable);
 void fillInitialPageTable(struct pte *pageTable);
 void initFirstPTRecord();
+int numPagesInUse(struct pte *pageTable);

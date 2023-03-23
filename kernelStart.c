@@ -8,6 +8,7 @@
 #include "pageTableManagement.h"
 #include "processControlBlock.h"
 #include "loadProgram.h"
+#include "contextSwitch.h"
 
 void **interruptVectorTable;
 int isInit = 1;
@@ -76,20 +77,36 @@ void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, c
     WriteRegister(REG_VM_ENABLE, 1);
     TracePrintf(2, "kernelStart: Virtual memory now enabled\n");
 
+    // create the init process
+    struct processControlBlock* initPCB = createNewProcess(INIT_PID, ORPHAN_PARENT_PID);
+
     // TODO: need to implement LoadProgram and ContextSwitch
     // load the idle process
-    char** idleArgs = malloc(sizeof(char*) * 2);
-    idleArgs[0] = "idle";
-    idleArgs[1] = NULL;
+    char *loadargs[1];
+    loadargs[0] = NULL;
     
     TracePrintf(2, "kernelStart: Starting to load idle program");
-    if(LoadProgram("idle", idleArgs, 0, freePhysicalPageCount(), frame, idlePCB) < 0){
-	Halt();
-    }
+//    if(LoadProgram("idle", idleArgs, 0, freePhysicalPageCount(), frame, idlePCB) < 0){
+//	Halt();
+//    }
+    LoadProgram("idle", loadargs, frame, idlePCB);
     TracePrintf(2, "kernelStart: Loaded idle program");
+
+    ContextSwitch(idleInitFunc, &idlePCB->savedContext, (void*)idlePCB, (void*)initPCB);
 
 
     // load the init process
+    if (isInit == 1){
+        isInit = 0;
+        if (cmd_args[0] != NULL){
+            LoadProgram(cmd_args[0], cmd_args, frame, initPCB);
+        }
+        else{
+            LoadProgram("init", loadargs, frame, initPCB);
+        }
+    }
+
+    // remember to add the setting break stuff to load program and do an IO initialization for later terminals n stuff
 
 
 }
