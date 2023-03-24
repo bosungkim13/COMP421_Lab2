@@ -13,6 +13,10 @@ createNewProcess(int pid, int parentPid){
     pcb -> outOfMemory = 0;
     pcb -> isWaiting = 0;
     pcb -> numChildren = 0;
+    pcb -> isReading = -1;
+    pcb -> isWriting = -1;
+    pcb -> isWaitReading = -1;
+    pcb -> isWaitWriting = -1;
     
     addToSchedule(pcb);
     if (pid == IDLE_PID){

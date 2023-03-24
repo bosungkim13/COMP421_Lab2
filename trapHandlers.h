@@ -2,19 +2,19 @@
 #include <comp421/yalnix.h>
 
 
-void getPidHandler(ExceptionInfo *frame);
-void delayHandler(ExceptionInfo *frame);
-void exitHandler(ExceptionInfo *frame, int error);
-void forkTrapHandler(ExceptionInfo *frame);
-void waitTrapHandler(ExceptionInfo *frame);
-void execTrapHandler(ExceptionInfo *frame);
-void ttyReadHandler(ExceptionInfo *frame);
-void ttyWriteHandler(ExceptionInfo *frame);
-void kernelTrapHandler(ExceptionInfo *frame);
-void clockTrapHandler (ExceptionInfo *frame);
-void illegalTrapHandler (ExceptionInfo *frame);
-void memoryTrapHandler (ExceptionInfo *frame);
-void mathTrapHandler (ExceptionInfo *frame);
-void ttyRecieveTrapHandler (ExceptionInfo *frame);
-void ttyTransmitTrapHandler (ExceptionInfo *frame);
-void reset_time_till_switch();
+void getPidHandler(ExceptionInfo *info);
+void delayHandler(ExceptionInfo *info);
+void exitHandler(ExceptionInfo *info, int error);
+void forkTrapHandler(ExceptionInfo *info);
+void waitTrapHandler(ExceptionInfo *info);
+void execTrapHandler(ExceptionInfo *info);
+void ttyReadHandler(ExceptionInfo *info);
+void ttyWriteHandler(ExceptionInfo *info);
+void kernelTrapHandler(ExceptionInfo *info);
+void clockTrapHandler (ExceptionInfo *info);
+void illegalTrapHandler (ExceptionInfo *info);
+void memoryTrapHandler (ExceptionInfo *info);
+void mathTrapHandler (ExceptionInfo *info);
+void ttyRecieveTrapHandler (ExceptionInfo *info);
+void ttyTransmitTrapHandler (ExceptionInfo *info);
+void resetSwitchTime();

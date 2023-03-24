@@ -14,3 +14,8 @@ struct scheduleNode {
 
 void addToSchedule(struct processControlBlock *pcb);
 struct scheduleNode* getHead();
+int getCurrentPid();
+void decreaseDelay();
+void scheduleProcess();
+void chooseNextProcess();
+int nextProcessToHead(int delayMatch);

@@ -7,7 +7,7 @@ struct processControlBlock
 {
   int pid;
   struct pte *pageTable;
-  SavedContext savedContext;
+  struct SavedContext savedContext;
   int delay;
   void *brk;
   void *userStackLimit;
@@ -15,6 +15,10 @@ struct processControlBlock
   int numChildren;
   int parentPid;
   int outOfMemory;
+  int isReading;
+  int isWaitReading;
+  int isWriting;
+  int isWaitWriting;
 
   // need to add stuff for exit status as well
 
