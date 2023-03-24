@@ -47,7 +47,7 @@ void initFirstPTRecord(){
   struct pageTableRecord *pageTableRecord = malloc(sizeof(struct pageTableRecord));
 
   void *pageBase = (void *)DOWN_TO_PAGE(VMEM_1_LIMIT - 1);
-  //markPagesInRange((void*)(VMEM_1_LIMIT - 1), (void*)(VMEM_1_LIMIT - 1));
+  markPagesInRange((void*)(VMEM_1_LIMIT - 1), (void*)(VMEM_1_LIMIT - 1));
 
   pageTableRecord->pageBase = pageBase;
   pageTableRecord->isTopFull = 0;

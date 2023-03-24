@@ -19,7 +19,7 @@ void initPhysicalPageArray(unsigned int pmem_size){
     numPhysicalPages = pmem_size/PAGESIZE;
     isPhysicalPageOccupied = malloc(numPhysicalPages * sizeof(int));
     memset(isPhysicalPageOccupied, 0, numPhysicalPages);
-    //markPagesInRange((void*)VMEM_1_BASE, kernelBrk);
+    markPagesInRange((void*)VMEM_1_BASE, kernelBrk);
 }
 // helper function to return number of free phyical pages
 int freePhysicalPageCount(){
