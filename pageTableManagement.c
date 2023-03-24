@@ -19,7 +19,7 @@ struct pte* initKernelPT(){
     
     int endHeap = UP_TO_PAGE((long)kernelBrk - (long)VMEM_1_BASE) / PAGESIZE;
     int endText = ((long)&_etext - (long)VMEM_1_BASE) / PAGESIZE;
-    TracePrintf(2, "pageTableManagement: kernel heap ends at vpn: %d kernel text ends at vpn: %d.\n");
+    TracePrintf(2, "pageTableManagement: kernel heap ends at vpn: %d kernel text ends at vpn: %d.\n", endHeap, endText);
 
     int i;
     for (i = 0; i < PAGE_TABLE_LEN; i++){
@@ -68,18 +68,18 @@ void initFirstPTRecord(){
 struct pte*
 createPageTable(){
 
-    TracePrintf(3, "pageTableManagement: Started creating page table");
+    TracePrintf(3, "pageTableManagement: Started creating page table\n");
     struct pageTableRecord *current = getFirstPageTableRecord();
     while (1){
         if (current->isTopFull == 0){
             struct pte *newPT = (struct pte*) ((long)current->pageBase + PAGE_TABLE_SIZE);
             current -> isTopFull = 1;
-            TracePrintf(3, "pageTableManagement: Used top of page to create Page Table");
+            TracePrintf(3, "pageTableManagement: Used top of page to create Page Table\n");
             return newPT;
         } else if (current ->isBottomFull == 0){
             struct pte *newPT = (struct pte*) ((long) current->pageBase);
             current -> isBottomFull = 1;
-            TracePrintf(3, "pageTableManagement: Used bottom of page to create Page Table");
+            TracePrintf(3, "pageTableManagement: Used bottom of page to create Page Table\n");
             return newPT;
         }else{
             if(current->next != NULL){
@@ -97,7 +97,7 @@ createPageTable(){
 
     struct pageTableRecord *newPTRecord = malloc(sizeof(struct pageTableRecord));
     if(newPTRecord == NULL){
-    	TracePrintf(2, "Kernel failed malloc for new pageTableRecord, halting ...");
+    	TracePrintf(2, "Kernel failed malloc for new pageTableRecord, halting ...\n");
     	Halt();
     }
 
@@ -112,7 +112,7 @@ createPageTable(){
     int vpn = 1023;
     for(; vpn >= VMEM_1_BASE/PAGESIZE && kernelPageTable[vpn].valid == 1; vpn--){}
     if(vpn == (VMEM_0_LIMIT-1)/PAGESIZE){
-    	TracePrintf(2, "Kernel failed finding an invalid vpn in the kernel pt to use for accessing the new pageTableRecord, halting ...");
+    	TracePrintf(2, "Kernel failed finding an invalid vpn in the kernel pt to use for accessing the new pageTableRecord, halting ...\n");
     	Halt();
     }
     kernelPageTable[vpn].valid = 1;

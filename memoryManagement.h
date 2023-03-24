@@ -15,3 +15,8 @@ void freePhysicalPage(unsigned int pfn);
 void brkHandler(ExceptionInfo *frame);
 void markKernelPagesTo(void *end);
 void * virtualToPhysicalAddr(void * va);
+
+void initVM();
+void setupStackSwapSpace();
+void* getStackSwapSpace();
+

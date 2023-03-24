@@ -29,7 +29,7 @@ SavedContext* idleInitFunc(SavedContext *ctxp, void* p1, void* p2){
 
     TracePrintf(3, "context_switch: beginning kernel stack copy.\n");
 
-    for (i = 0; i < KERNEL_STACK_PAGES; i++) {
+    /*for (i = 0; i < KERNEL_STACK_PAGES; i++) {
         unsigned int process2PPN = getFreePhysicalPage();
 
         // CHANGE TO WHILE LOOP
@@ -61,12 +61,43 @@ SavedContext* idleInitFunc(SavedContext *ctxp, void* p1, void* p2){
                 break;
             }
         }
-    }
+    }*/
+    copyKernelStack(pcbFrom->pageTable, pcbTo->pageTable);
 
-    WriteRegister(REG_PTR0, (RCS421RegVal)virtualToPhysicalAddr(pageTable2));
-    WriteRegister(REG_TLB_FLUSH, TLB_FLUSH_0);
+    /*WriteRegister(REG_PTR0, (RCS421RegVal)virtualToPhysicalAddr(pageTable2));
+    WriteRegister(REG_TLB_FLUSH, TLB_FLUSH_0);*/
+    switchReg0To(pcbTo->pageTable);
 
     TracePrintf(1, "context_switch: idle_and_init_initialization completed.\n");
 
     return &pcbFrom->savedContext;  
 }
+
+// Assumes REG_PTR0 points to the physical address that is the base of virtPTFrom
+// and returns with REG_PTR0 pointed to that as well
+void copyKernelStack(struct pte* virtPTFrom, struct pte* virtPTTo){
+	void* stackSwapSpace = getStackSwapSpace();
+	
+	TracePrintf(2, "contextSwitch - copyKernelStack - Copying kernelStack from source pt at %p to temp at %p\n", virtPTFrom, stackSwapSpace);
+	memcpy(stackSwapSpace, (void*)KERNEL_STACK_BASE, KERNEL_STACK_SIZE);
+	switchReg0To(virtPTTo);
+	
+	TracePrintf(2, "contextSwitch - copyKernelStack - Giving new process free physical pages\n");
+	int i = 0;
+	for(; i < KERNEL_STACK_PAGES; i++){
+		virtPTTo[KERNEL_STACK_BASE/PAGESIZE + i].valid = 1;
+		virtPTTo[KERNEL_STACK_BASE/PAGESIZE + i].pfn = getFreePhysicalPage();
+	}
+	
+	TracePrintf(2, "contextSwitch - copyKernelStack - Copying kernelStack from temp at %p to dest pt at %p\n", stackSwapSpace, virtPTTo);
+	memcpy((void*)KERNEL_STACK_BASE, stackSwapSpace, KERNEL_STACK_SIZE);
+	switchReg0To(virtPTFrom);
+	
+	TracePrintf(2, "contextSwitch - copyKernelStack - Kernel stack successfully copied from pt %p to pt %p\n", virtPTFrom, virtPTTo);
+}
+
+void switchReg0To(void* destPTVirt){
+	WriteRegister(REG_PTR0, (RCS421RegVal)virtualToPhysicalAddr(destPTVirt));
+	WriteRegister(REG_TLB_FLUSH, TLB_FLUSH_0);
+}
+

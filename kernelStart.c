@@ -74,8 +74,10 @@ void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, c
     WriteRegister(REG_PTR0, (RCS421RegVal) idlePCB->pageTable);
     TracePrintf(2, "kernelStart: Idle process created and PTR0 has been set\n");
 
-    WriteRegister(REG_VM_ENABLE, 1);
+    
+    initVM();
     TracePrintf(2, "kernelStart: Virtual memory now enabled\n");
+    setupStackSwapSpace();
 
     // create the init process
     struct processControlBlock* initPCB = createNewProcess(INIT_PID, ORPHAN_PARENT_PID);

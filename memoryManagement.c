@@ -9,6 +9,7 @@ int *isPhysicalPageOccupied = NULL;
 int numPhysicalPages;
 void *kernelBrk = (void *)VMEM_1_BASE;
 int isVMInitialized = 0;
+void* stackSwapSpace;
 
 void initKernelBrk(void *origBrk){
 	kernelBrk = origBrk;
@@ -89,6 +90,7 @@ void brkHandler(ExceptionInfo *frame){
 int SetKernelBrk(void *addr) {
     int i;
     if (isVMInitialized) {
+    	TracePrintf(2, "SetKernelBrk After VM: Requesting address %p, kernelBrk currently at %p\n", addr, kernelBrk);
         int numNeedPages = ((long)UP_TO_PAGE(addr) - (long)kernelBrk)/PAGESIZE;
         if(freePhysicalPageCount() < numNeedPages){
             return -1;
@@ -103,6 +105,7 @@ int SetKernelBrk(void *addr) {
             }
             markKernelPagesTo(addr);
         }
+        TracePrintf(2, "SetKernelBrk After VM: Requested address %p, kernelBrk moved to %p\n", addr, kernelBrk);
     } else {
         // SetKernelBrk should never be reallocate a page
         if ((long)addr <= (long)kernelBrk - PAGESIZE) {
@@ -112,6 +115,11 @@ int SetKernelBrk(void *addr) {
     }
 
     return 0;
+}
+
+void initVM(){
+	isVMInitialized = 1;
+	WriteRegister(REG_VM_ENABLE, 1);
 }
 
 void* virtualToPhysicalAddr(void *va){
@@ -132,3 +140,12 @@ void* virtualToPhysicalAddr(void *va){
     return (void*)((long)pPageBase + ((long)va & PAGEOFFSET));
 }
 
+void setupStackSwapSpace(){
+	int numPages = KERNEL_STACK_PAGES;
+	TracePrintf(2, "memoryManagement - setupSwapSpace - Beginning malloc for %d pages worth\n", numPages);
+	stackSwapSpace = malloc(numPages * PAGESIZE);
+	TracePrintf(2, "memoryManagement - setupSwapSpace - Completed malloc for %d pages worth\n", numPages);
+}
+void* getStackSwapSpace(){
+	return stackSwapSpace;
+}
