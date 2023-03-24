@@ -56,10 +56,26 @@ void waitTrapHandler(ExceptionInfo *info){
 }
 
 void execTrapHandler(ExceptionInfo *info){
+  char *filename = (char *)info->regs[1];
+  char **argvec = (char **)info->regs[2];
 
+  struct scheduleNode *node = getHead();
+
+  int loadReturn = LoadProgram(filename, argvec, info, node->pcb);
+  if (loadReturn == -1){
+    info->regs[0] = ERROR;
+  }
 }
 
 void forkTrapHandler(ExceptionInfo *info){
+  // create child process
+
+  // call context switch that copies region 0
+
+  // if the parent pcb is out of memory then pcb at the head is the child but hte page table and contezt are the parents
+  // in this case, we need to remove the head from the schedule
+
+  // otherwise, return childs pid or return 0 if you are the child
 
 
 }
