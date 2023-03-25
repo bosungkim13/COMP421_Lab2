@@ -128,18 +128,47 @@ void getPidHandler(ExceptionInfo *info) {
 
 }
 
-/*
- * Process:
- * 1. Set the delay inside the current process's pcb
- * 2. move current process to the end of the schedule
- * 3. move the next process to be run to the head
- * 4. context switch from currently running process to that next process
- */
 void delayHandler(ExceptionInfo *info) {
+  int ticksToGo = info->regs[1];
+  struct scheduleNode *currNode = getHead();
+  struct processControlBlock *currPCB = currNode->pcb;
+  
+  // check that we have a valid delay
+  if (ticksToGo < 0){
+    info->regs[0] = ERROR;
+    return;
+  }
+  // set the delay in current process
+  currPCB->delay = ticksToGo;
+  info->regs[0] = 0;
 
+  if(ticksToGo > 0){
+    TracePrintf(1, "trapHandlers: In delayHandler... initiating a context switch.\n");
+    scheduleProcess();
+  }
+  return;
 }
 
 void exitHandler(ExceptionInfo *info, int error) {
+  struct scheduleNode *currNode = getHead();
+  int exitType;
+  if (error) {
+    exitType = ERROR;
+  } else {
+    exitType= info->regs[1];
+  }
+
+  TracePrintf(1, "trapHandlers: Process with pid %d attempting to exit\n", currNode->pcb->pid);
+
+  // check that pcb is not an orphan process
+  if (currNode->pcb->parentPid != ORPHAN_PARENT_PID) {
+
+    struct processControlBlock *parentPCB = getPCB(currNode->pcb->parentPid);
+    TracePrintf(3, "trap_handlers: parent: %d\n", parentPCB->pid);
+    parentPCB->isWaiting = 0;
+    // TODO need to do more bookkeeping to keep track of exiting processes
+  }
+  // TODO remove the current node from scheduling and perform scheduling to pick a new process
 
 }
 

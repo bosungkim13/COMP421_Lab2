@@ -26,3 +26,4 @@ struct processControlBlock
 };
 
 struct processControlBlock* createNewProcess(int pid, int parentPid);
+struct processControlBlock* getPCB(int pid);

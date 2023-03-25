@@ -27,3 +27,16 @@ createNewProcess(int pid, int parentPid){
     
     return pcb;
 }
+
+struct processControlBlock* getPCB(int pid){
+    struct scheduleNode *currNode = getHead();
+
+    // iterate and find node that matches target pid
+    while (currNode != NULL){
+        if (currNode->pcb->pid == pid){
+            return currNode->pcb;
+        }
+        currNode = currNode->next;
+    }
+    return NULL;
+}
