@@ -20,3 +20,4 @@ void fillPageTable(struct pte *pageTable);
 void fillInitialPageTable(struct pte *pageTable);
 void initFirstPTRecord();
 int numPagesInUse(struct pte *pageTable);
+void freePageTable(struct pte *pageTable);

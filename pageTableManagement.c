@@ -178,4 +178,33 @@ int numPagesInUse(struct pte *pageTable){
     return count;
 }
 
+void freePageTable(struct pte* pageTable){
+  TracePrintf(1, "pageTableManagement: Freeing page table: %p\n", pageTable);
+  
+  // figure out which page base this page table uses.
+  void *pageBase = (void *)DOWN_TO_PAGE(pageTable);
+
+  // find entry corresponding to page base.
+  struct pageTableRecord *curr = getFirstPageTableRecord();
+  while (curr != NULL) {
+    if (curr->pageBase == pageBase) {
+        // determine if page table was top or bottom half of physical page
+        if ((void *)pageTable != page_base) {
+            curr->isTopFull = 0;
+        } else {
+            curr->isBottomFull = 0;
+        }
+        // if page is completely empty we can free the entire page
+        if (curr->isBottomFull && curr->isTopFull && curr->next == NULL) {
+            freePhysicalPage((long)page_base / PAGESIZE);
+            free(curr);
+        }
+        return;
+    }
+    curr = curr->next;
+  }
+  TracePrintf(0, "pageTableManagement: page %p trying to be freed is not available\n", pageTable);
+  Halt();   
+}
+
 

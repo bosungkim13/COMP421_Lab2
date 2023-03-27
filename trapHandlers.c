@@ -37,7 +37,7 @@ void kernelTrapHandler(ExceptionInfo *info) {
       break;
     case YALNIX_DELAY:
       TracePrintf(1, "trapHandlers: Delay requested.\n");
-      delayHandler(frame);
+      delayHandler(info);
       break;
     case YALNIX_TTY_READ:
       TracePrintf(1, "trapHandlers: Tty Read requested.\n");
@@ -72,10 +72,38 @@ void forkTrapHandler(ExceptionInfo *info){
 
   // call context switch that copies region 0
 
+
+
+  
+  struct scheduleNode *currNode = getHead();
+  struct processControlBlock *parentPCB = currNode->pcb;
+
+  //create child process
+  int childPid = nextPid();
+  int parentPid = getCurrentPid();
+  struct processControlBlock *childPCB = createNewProcess(childPid, parentPid);
+
+  // call contezt switch that copies region 0
+  ContextSwitch(forkFunc, &parentPCB->savedContext, (void *)parentPCB, (void *)childPCB);
+
+  if (parentPCB->noMemory) {
   // if the parent pcb is out of memory then pcb at the head is the child but hte page table and contezt are the parents
   // in this case, we need to remove the head from the schedule
+    TracePrintf(1, "trapHandlers: in fork handler but not enough memory for region 1 copy.\n");
+    struct scheduleNode *currNode = getHead();
 
-  // otherwise, return childs pid or return 0 if you are the child
+    // TODO remove the head of the schedule but we should create a function since we cannot modify from this file.
+
+    info->regs[0] = ERROR;
+  } else {
+    // otherwise, return childs pid or return 0 if you are the child
+    if(getCurrentPid() == childPid){
+      info->regs[0] = 0;
+    } else {
+      info->regs[0] = child_pid;
+      parentPCB->numChildren++;
+    }
+  }
 
 
 }
@@ -149,6 +177,11 @@ void delayHandler(ExceptionInfo *info) {
   return;
 }
 
+void resetSwitchTime(){
+  timeToSwitch = SCHEDULE_DELAY;
+}
+
+
 void exitHandler(ExceptionInfo *info, int error) {
   struct scheduleNode *currNode = getHead();
   int exitType;
@@ -162,16 +195,12 @@ void exitHandler(ExceptionInfo *info, int error) {
 
   // check that pcb is not an orphan process
   if (currNode->pcb->parentPid != ORPHAN_PARENT_PID) {
-
     struct processControlBlock *parentPCB = getPCB(currNode->pcb->parentPid);
     TracePrintf(3, "trap_handlers: parent: %d\n", parentPCB->pid);
     parentPCB->isWaiting = 0;
-    // TODO need to do more bookkeeping to keep track of exiting processes
+    // need to do more bookkeeping to keep track of exiting processes
+    appendChildExitNode(parentPCB, getCurrentPid(), exitType);
   }
-  // TODO remove the current node from scheduling and perform scheduling to pick a new process
-
-}
-
-void resetSwitchTime(){
-  timeToSwitch = SCHEDULE_DELAY;
+  // remove the current node from scheduling and perform scheduling to pick a new process
+  removeExitingProcess();
 }

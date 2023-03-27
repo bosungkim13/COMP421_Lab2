@@ -10,13 +10,13 @@ createNewProcess(int pid, int parentPid){
     pcb -> pageTable = createPageTable();
     pcb -> delay = 0;
     pcb -> parentPid = parentPid;
-    pcb -> outOfMemory = 0;
     pcb -> isWaiting = 0;
     pcb -> numChildren = 0;
     pcb -> isReading = -1;
     pcb -> isWriting = -1;
     pcb -> isWaitReading = -1;
     pcb -> isWaitWriting = -1;
+    pcb -> noMemory = 0;
     
     addToSchedule(pcb);
     if (pid == IDLE_PID){
@@ -39,4 +39,25 @@ struct processControlBlock* getPCB(int pid){
         currNode = currNode->next;
     }
     return NULL;
+}
+
+void appendChildExitNode(struct processControlBlock* parentPCB, int pid, int exitType){
+    // malloc for new node and get the current head of exit queue
+    struct exitNode *newExit = malloc(sizeof(struct exitNode));
+    struct exitNode *currExit = parentPCB->exitQ;
+
+    // set values in new exit node
+    newExit->pid = pid;
+    newExit->exitType = exitType;
+    newExit->next = NULL;
+
+    // add new exit node to the PCB starting a new list if needed
+    if (currExit != NULL) {
+        while (currExit->next != NULL) {
+        currExit = currExit->next;
+        }
+        currExit->next = newExit;     
+    } else {
+        parentPCB->exitQ = newExit;
+    }
 }

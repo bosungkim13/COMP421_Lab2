@@ -6,6 +6,8 @@
 #include "pageTableManagement.h"
 
 struct scheduleNode *head = NULL;
+// first process will have pid of 2
+int nextPid = 2
 
 void
 addToSchedule(struct processControlBlock *pcb){
@@ -37,44 +39,64 @@ void decreaseDelay(){
   }
 }
 
-void scheduleProcess(){
+void scheduleProcess(int isExit){
   TracePrintf(1, "processScheduling: Scheduling processes...\n");
   struct scheduleNode *currNode = head->next;
   struct processControlBlock *currPCB = head->pcb;
+  struct processControlBlock *nextPCB;
 
-  // determine if there are other processes we can switch to
-  int flag;
-  while (currNode != NULL){
-    currPCB = currNode->pcb;
-    if (currPCB->delay == 0){
-      flag = 1;
-    }
-    currNode = currNode->next;
-  }
-  if (flag == NULL){
-    flag = 0;
-  }
-  currNode = head;
-
-  if (flag || currPCB->pid != 1){
-    // move the head node to the tail end
-    if (head->next != NULL && head != NULL){
-      struct scheduleNode *newHead = head->next;
-      while (currNode->next != NULL){
-        currNode = currNode->next;
+  // if we are scheduling during a NON exit scenario
+  if (isExit == 0){
+    currNode = head->next;
+    currPCB = head->pcb;
+    // determine if there are other processes we can switch to
+    int flag;
+    while (currNode != NULL){
+      currPCB = currNode->pcb;
+      if (currPCB->delay == 0){
+        flag = 1;
       }
-      head->next = NULL;
-      currNode->next = head;
-      head = newHead;
+      currNode = currNode->next;
     }
-    chooseNextProcess();
+    if (flag == NULL){
+      flag = 0;
+    }
     currNode = head;
-    struct processControlBlock *nextPCB = currNode->pcb;
-    ContextSwitch(mySwitchFunc, &currPCB->savedContext, (void *)currPCB, (void *)nextPCB);
+
+    if (flag || currPCB->pid != 1){
+      // move the head node to the tail end
+      if (head->next != NULL && head != NULL){
+        struct scheduleNode *newHead = head->next;
+        while (currNode->next != NULL){
+          currNode = currNode->next;
+        }
+        head->next = NULL;
+        currNode->next = head;
+        head = newHead;
+      }
+      chooseNextProcess();
+      currNode = head;
+      nextPCB = currNode->pcb;
+      ContextSwitch(mySwitchFunc, &currPCB->savedContext, (void *)currPCB, (void *)nextPCB);
+      resetSwitchTime();
+    }
+  } else{
+    currNode = getHead();
+    currPCB = currNode->pcb;
+    head = currNode->next;
+
+    chooseNextProcess();
+    struct scheduleNode *nextHead = getHead();
+    nextPCB = nextHead->pcb;
+
+    ContextSwitch(mySwitchFunc, &nexPCB->savedContext, (void *)currPCB, (void *)nextPCB);
     resetSwitchTime();
+  
   }
+
 
 }
+
 
 void chooseNextProcess(){
   TracePrintf(1, "processScheduling: Beginning select_next_process.\n");
@@ -110,5 +132,37 @@ int nextProcessToHead(int delayMatch){
   }
 
   return 0;  
+}
+
+void removeExitingProcess(){
+  struct scheduleNode *currNode = getHead();
+
+  if (currNode == NULL) {
+    TracePrintf(1, "processScheduling: Trying to remove an \"exiting\" process when there are no processes.\n");
+    Halt();    
+  }
+  struct processControlBlock *currPCB = currNode->pcb;
+  if (currPCB->pid == IDLE_PID) {
+    TracePrintf(1, "processScheduling: Trying to exit with the idle process.\n");
+    Halt();
+  }
+  scheduleProcess(1);
+  TracePrintf(1, "processScheduling: with scheduleNode: %p\n", currNode);
+  TracePrintf(1, "processScheduling: with PCB: %p\n", currPCB);
+  TracePrintf(1, "processScheduling: with page table: %p\n", currPCB->pageTable);
+  
+  // remove the head off the list of processes
+  currNode = getHead();
+  head = currNode->next;
+  freePageTable(currNode->pcb->pageTable);
+  free(currNode->pcb);
+  free(currNode);
+
+  TracePrintf(2, "processScheduling: Completed removal of exiting process.\n");
+
+}
+
+int nextPid(){
+  return nextPid++;
 }
 
