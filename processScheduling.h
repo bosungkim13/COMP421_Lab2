@@ -21,3 +21,4 @@ void chooseNextProcess();
 int nextProcessToHead(int delayMatch);
 void removeExitingProcess();
 int nextPid();
+void removeHead();

@@ -19,4 +19,5 @@ void * virtualToPhysicalAddr(void * va);
 void initVM();
 void setupStackSwapSpace();
 void* getStackSwapSpace();
+int growUserStack(ExceptionInfo *info, struct scheduleNode *head);
 

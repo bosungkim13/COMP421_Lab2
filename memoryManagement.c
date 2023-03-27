@@ -149,3 +149,26 @@ void setupStackSwapSpace(){
 void* getStackSwapSpace(){
 	return stackSwapSpace;
 }
+
+// return 1 on success 0 on failure
+int growUserStack(ExceptionInfo *info, struct scheduleNode *head){
+    void *addr = info->addr;
+    if((DOWN_TO_PAGE(addr) < DOWN_TO_PAGE(head->pcb->userStackLimit)) && (UP_TO_PAGE(addr) > (UP_TO_PAGE(head->pcb->brk) + PAGESIZE))){
+        struct processControlBlock *pcb = head->pcb;
+        int neededPages = (DOWN_TO_PAGE(pcb->userStackLimit) - DOWN_TO_PAGE(addr)) / PAGESIZE;
+        TracePrintf(2, "memoryManagement: Entering grow_user_stack with process %d, for addr %p and need %d pages \n", pcb->pid, addr, neededPages);
+        int i;
+        for(i = 0; i < neededPages; i++) {
+            unsigned int ppn = getFreePhysicalPage();
+            int vpn = (long)DOWN_TO_PAGE(pcb->userStackLimit) / PAGESIZE - i - 1;
+            pcb->pageTable[vpn].valid = 1;
+            pcb->pageTable[vpn].pfn = ppn;
+        }
+        pcb->userStackLimit = (void *)DOWN_TO_PAGE(addr);
+        TracePrintf(2, "memmoryManagement: Grew user stack limiit to %p \n", pcb->userStackLimit);
+        return 1;
+    } 
+    else{
+        return 0;
+    }
+}

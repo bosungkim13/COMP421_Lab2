@@ -68,13 +68,6 @@ void execTrapHandler(ExceptionInfo *info){
 }
 
 void forkTrapHandler(ExceptionInfo *info){
-  // create child process
-
-  // call context switch that copies region 0
-
-
-
-  
   struct scheduleNode *currNode = getHead();
   struct processControlBlock *parentPCB = currNode->pcb;
 
@@ -91,9 +84,8 @@ void forkTrapHandler(ExceptionInfo *info){
   // in this case, we need to remove the head from the schedule
     TracePrintf(1, "trapHandlers: in fork handler but not enough memory for region 1 copy.\n");
     struct scheduleNode *currNode = getHead();
-
     // TODO remove the head of the schedule but we should create a function since we cannot modify from this file.
-
+    removeHead();
     info->regs[0] = ERROR;
   } else {
     // otherwise, return childs pid or return 0 if you are the child
@@ -104,8 +96,6 @@ void forkTrapHandler(ExceptionInfo *info){
       parentPCB->numChildren++;
     }
   }
-
-
 }
 
 void clockTrapHandler (ExceptionInfo *info) {
@@ -123,9 +113,103 @@ void clockTrapHandler (ExceptionInfo *info) {
 
 void illegalTrapHandler (ExceptionInfo *info) {
 
+  TracePrintf(1, "trapHandlers: Illegal trap handler \n");
+  if (info -> code == TRAP_ILLEGAL_ILLOPC) {
+      TracePrintf(1, "Illegal Opcode \n");
+  }
+
+  else if (info -> code == TRAP_ILLEGAL_ILLOPN) {
+      TracePrintf(1, "Illegal Operand \n");
+  }
+
+  else if (info -> code == TRAP_ILLEGAL_ILLADR) {
+      TracePrintf(1, "Illegal address mode \n");
+  }
+
+  else if (info -> code == TRAP_ILLEGAL_ILLTRP) {
+      TracePrintf(1, "Illegal software trap \n");
+  }
+
+  else if (info -> code == TRAP_ILLEGAL_PRVOPC) {
+      TracePrintf(1, "Privileged opcode \n");
+  }
+
+  else if (info -> code == TRAP_ILLEGAL_PRVREG) {
+      TracePrintf(1, "Privileged register \n");
+  }
+
+  else if (info -> code == TRAP_ILLEGAL_COPROC) {
+      TracePrintf(1, "Coprocessor error \n");
+  }
+
+  else if (info -> code == TRAP_ILLEGAL_BADSTK) {
+      TracePrintf(1, "Bad stack \n");
+  }
+
+  else if (info -> code == TRAP_ILLEGAL_KERNELI) {
+      TracePrintf(1, "Linux kernel sent SIGILL \n");
+  }
+
+  else if (info -> code == TRAP_ILLEGAL_USERIB) {
+      TracePrintf(1, "Received SIGILL or SIGBUS from user \n");
+  }
+
+  else if (info -> code == TRAP_ILLEGAL_ADRALN) {
+      TracePrintf(1, "Invalid address alignment \n");
+  }
+
+  else if (info -> code == TRAP_ILLEGAL_ADRERR) {
+      TracePrintf(1, "Non-existent physical address \n");
+  }
+
+  else if (info -> code == TRAP_ILLEGAL_OBJERR) {
+      TracePrintf(1, "Object-specific HW error \n");
+  }
+
+  else if (info -> code == TRAP_ILLEGAL_KERNELB) {
+      TracePrintf("Linux kernel sent SIGBUS \n");
+  }
+  else { 
+    return; 
+  }
+  exitHandler(info, info->code);
+  return;
 }
 
 void memoryTrapHandler (ExceptionInfo *info) {
+  TracePrintf(1, "trapHandler: Memory handler \n");
+  if (info -> code == TRAP_MEMORY_MAPERR) {
+    TracePrintf(1, "No mapping at address... trying to grow user stack...");
+    struct scheduleNode *head = getHead();
+    void *addr = info->addr;
+    // changed to
+    if (growUserStack(info, head)){
+      return;
+    }
+    // TODO should I add an exit handler here
+    exitHandler(info, info->code);
+  }
+
+  else if (info -> code == TRAP_MEMORY_ACCERR) {
+    TracePrintf(1, "Protection violation at addr %p \n", info->addr);
+    exitHandler(info, info->code);
+    return;
+  }
+
+  else if (info -> code == TRAP_MEMORY_KERNEL) {
+    TracePrintf("Linux kernel sent SIGSEGV at addr %p \n", info->addr);
+    exitHandler(info, info->code);
+    return;
+  }
+
+  else if (info -> code == TRAP_MEMORY_USER) {
+    TracePrintf(1, "Received SIGSEGV from user");
+    exitHandler(info, info->code);
+    return;
+  }
+  else { 
+    return; 
+  }
 
 }
 
@@ -153,7 +237,7 @@ ttyWriteHandler(ExceptionInfo *info) {
 }
 
 void getPidHandler(ExceptionInfo *info) {
-
+  info->regs[0] = getCurrentPid();
 }
 
 void delayHandler(ExceptionInfo *info) {

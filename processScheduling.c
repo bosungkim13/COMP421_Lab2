@@ -166,3 +166,13 @@ int nextPid(){
   return nextPid++;
 }
 
+void removeHead(){
+  TracePrintf(2, "processScheduling: Begin to remove head of scheduled processes.\n");
+  struct scheduleNode *currHead = getHead();
+  head = currHead->next;
+  freePageTable(currHead->pcb->pageTable);
+  free(currHead->pcb);
+  free(currHead);
+  TracePrintf(2, "processScheduling: End removal to head of scheduled processes.\n");
+}
+
