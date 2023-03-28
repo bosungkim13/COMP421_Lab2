@@ -1,17 +1,17 @@
 #include <comp421/hardware.h>
 #include <comp421/yalnix.h>
 #include <stdlib.h>
+
+#include "processControlBlock.h"
+#include "processScheduling.h"
 #include "memoryManagement.h"
 #include "trapHandlers.h"
 #include <comp421/loadinfo.h>
-#include "processScheduling.h"
-#include "pageTableManagement.h"
-#include "processControlBlock.h"
+#include "pageTableManagement.h" 
 #include "loadProgram.h"
 #include "contextSwitch.h"
 
-void **interruptVectorTable;
-int isInit = 1;
+void **interruptVectorTable; int isInit = 1;
 
 void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, char **cmd_args){
     TracePrintf(1, "kernelStart - start of KernelStart to create %d physical pages.\n", pmem_size/PAGESIZE);
@@ -70,6 +70,7 @@ void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, c
 
     // Region 0 page table initialization and creating the idle process
     struct processControlBlock *idlePCB = createNewProcess(IDLE_PID, ORPHAN_PARENT_PID);
+    setIdlePCB(idlePCB);
     // set PTR0
     WriteRegister(REG_PTR0, (RCS421RegVal) idlePCB->pageTable);
     TracePrintf(2, "kernelStart: Idle process created and PTR0 has been set\n");
@@ -89,29 +90,33 @@ void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, c
     loadargs[1] = NULL;
     
     TracePrintf(2, "kernelStart: Starting to load idle program\n");
-//    if(LoadProgram("idle", idleArgs, 0, freePhysicalPageCount(), frame, idlePCB) < 0){
-//	Halt();
-//    }
-    LoadProgram("idle", loadargs, frame, idlePCB);
+    if(LoadProgram("idle", loadargs, frame, idlePCB) < 0){
+    	TracePrintf(1, "kernelStart: Failed to load idle. Halting...\n");
+    }
     TracePrintf(2, "kernelStart: Loaded idle program\n");
 
     ContextSwitch(idleInitFunc, &idlePCB->savedContext, (void*)idlePCB, (void*)initPCB);
 
 
-    // load the init process
+    // load the init process into one of the copies created by ContextSwitch,
+    // then flip "isInit" so idle (using the other copy) doesn't do the same
     if (isInit == 1){
         isInit = 0;
         if (cmd_args[0] != NULL){
-            LoadProgram(cmd_args[0], cmd_args, frame, initPCB);
+            if(LoadProgram(cmd_args[0], cmd_args, frame, initPCB) < 0){
+            	TracePrintf(1, "kernelStart: Failed to load %s. Halting...\n", cmd_args[0]);
+            	Halt();
+            }
         }
         else{
             loadargs[0] = "init";
             loadargs[1] = NULL;
-            LoadProgram(loadargs[0], loadargs, frame, initPCB);
+            if(LoadProgram(loadargs[0], loadargs, frame, initPCB) < 0){
+            	TracePrintf(1, "kernelStart: Failed to load %s. Halting...\n", loadargs[0]);
+            	Halt();
+            }
         }
     }
 
     // remember to add the setting break stuff to load program and do an IO initialization for later terminals n stuff
-
-
 }

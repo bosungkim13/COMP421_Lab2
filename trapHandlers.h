@@ -1,7 +1,6 @@
 #include <comp421/hardware.h>
 #include <comp421/yalnix.h>
 
-
 void getPidHandler(ExceptionInfo *info);
 void delayHandler(ExceptionInfo *info);
 void exitHandler(ExceptionInfo *info, int error);
@@ -17,4 +16,4 @@ void memoryTrapHandler (ExceptionInfo *info);
 void mathTrapHandler (ExceptionInfo *info);
 void ttyRecieveTrapHandler (ExceptionInfo *info);
 void ttyTransmitTrapHandler (ExceptionInfo *info);
-void resetSwitchTime();
+

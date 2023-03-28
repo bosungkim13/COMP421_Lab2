@@ -4,7 +4,6 @@
 
 #define INIT_PID 0
 #define IDLE_PID 1
-#define BASE_PID 2
 #define IDLE_DELAY -1
 
 struct scheduleNode {
@@ -13,12 +12,16 @@ struct scheduleNode {
 };
 
 void addToSchedule(struct processControlBlock *pcb);
+void setIdlePCB(struct processControlBlock* pcb);
 struct scheduleNode* getHead();
 int getCurrentPid();
+
+int setAndCheckClockTickPID();
 void decreaseDelay();
+
 void scheduleProcess(int isExit);
 void chooseNextProcess();
 int nextProcessToHead(int delayMatch);
 void removeExitingProcess();
-int nextPid();
+int updateAndGetNextPid();
 void removeHead();

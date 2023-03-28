@@ -1,8 +1,25 @@
+#include "processScheduling.h"
 #include "processControlBlock.h"
 #include "memoryManagement.h"
 #include "pageTableManagement.h"
+
 #include "contextSwitch.h"
 
+SavedContext* switchProcessFunction(SavedContext* context, void* p1, void* p2){
+	struct processControlBlock* sourcePCB = (struct processControlBlock*)p1;
+	struct processControlBlock* destPCB = (struct processControlBlock*)p2;
+	switchReg0To(destPCB->pageTable);
+	TracePrintf(1, "ContextSwitch - SwitchToExistingProcess - Switched from process id %d to process id %d\n", sourcePCB->pid, destPCB->pid);
+	return &destPCB->savedContext;
+}
+
+void switchToExistingProcess(struct processControlBlock* currentPCB,
+				struct processControlBlock* targetPCB){
+	ContextSwitch(switchProcessFunction, &currentPCB->savedContext,
+	    (void*)currentPCB, (void*)targetPCB);
+}
+
+/*
 SavedContext* mySwitchFunc(SavedContext *ctxp, void *p1, void *p2){
     struct processControlBlock *pcbTo = (struct processControlBlock *)p2;
     struct processControlBlock *pcbFrom = (struct processControlBlock *)p1;
@@ -11,7 +28,7 @@ SavedContext* mySwitchFunc(SavedContext *ctxp, void *p1, void *p2){
     WriteRegister(REG_PTR0, (RCS421RegVal) virtualToPhysicalAddr(pcbTo->pageTable));
     WriteRegister(REG_TLB_FLUSH, (RCS421RegVal)TLB_FLUSH_0);
     return &pcbTo->savedContext;
-}
+}*/
 
 /**
  * First copy process 1's kernel stack over to process 2. Then, switches context from process 1 to process 2.

@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern void *kernelBrk;
-
 void initKernelBrk(void *origBrk);
+void* getKernelBrk();
+
 void initPhysicalPageArray(unsigned int pmem_size);
 int freePhysicalPageCount();
 void markPagesInRange(void *start, void *end);

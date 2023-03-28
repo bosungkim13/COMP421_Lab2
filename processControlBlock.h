@@ -7,8 +7,8 @@ struct processControlBlock
 {
   int pid;
   struct pte *pageTable;
-  struct SavedContext savedContext;
-  int delay;
+  SavedContext savedContext;
+  int delay; // In clock ticks
   void *brk;
   void *userStackLimit;
   int isWaiting; // 1 if blocked due to a Wait call. 0 otherwise.
@@ -31,7 +31,7 @@ struct exitNode
   int pid;
   int exitType;
   struct exitNode *next;
-}
+};
 
 struct processControlBlock* createNewProcess(int pid, int parentPid);
 struct processControlBlock* getPCB(int pid);

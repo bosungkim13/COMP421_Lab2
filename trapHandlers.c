@@ -1,9 +1,10 @@
-#include "trapHandlers.h"
 #include <stdio.h>
+#include "processScheduling.h"
 #include "memoryManagement.h"
+#include "processControlBlock.h"
+#include "loadProgram.h"
 
-#define SCHEDULE_DELAY  2
-int timeToSwitch = SCHEDULE_DELAY;
+#include "trapHandlers.h"
 
 void kernelTrapHandler(ExceptionInfo *info) {
   TracePrintf(1, "trapHandlers: In TRAP_KERNEL interrupt handler...\n");
@@ -56,7 +57,7 @@ void waitTrapHandler(ExceptionInfo *info){
 }
 
 void execTrapHandler(ExceptionInfo *info){
-  char *filename = (char *)info->regs[1];
+  /*char *filename = (char *)info->regs[1];
   char **argvec = (char **)info->regs[2];
 
   struct scheduleNode *node = getHead();
@@ -64,20 +65,21 @@ void execTrapHandler(ExceptionInfo *info){
   int loadReturn = LoadProgram(filename, argvec, info, node->pcb);
   if (loadReturn == -1){
     info->regs[0] = ERROR;
-  }
+  }*/
 }
 
 void forkTrapHandler(ExceptionInfo *info){
-  struct scheduleNode *currNode = getHead();
+  /*struct scheduleNode *currNode = getHead();
   struct processControlBlock *parentPCB = currNode->pcb;
 
   //create child process
-  int childPid = nextPid();
+  int childPid = updateAndGetNextPid();
   int parentPid = getCurrentPid();
   struct processControlBlock *childPCB = createNewProcess(childPid, parentPid);
 
   // call contezt switch that copies region 0
-  ContextSwitch(forkFunc, &parentPCB->savedContext, (void *)parentPCB, (void *)childPCB);
+  // "forkFunc" actually doesn't exist. It's just declared in contextSwitch.h. It has no implementation.
+  //ContextSwitch(forkFunc, &parentPCB->savedContext, (void *)parentPCB, (void *)childPCB);
 
   if (parentPCB->noMemory) {
   // if the parent pcb is out of memory then pcb at the head is the child but hte page table and contezt are the parents
@@ -92,27 +94,21 @@ void forkTrapHandler(ExceptionInfo *info){
     if(getCurrentPid() == childPid){
       info->regs[0] = 0;
     } else {
-      info->regs[0] = child_pid;
+      info->regs[0] = childPid;
       parentPCB->numChildren++;
     }
-  }
+  }*/
 }
 
 void clockTrapHandler (ExceptionInfo *info) {
-  TracePrintf(1, "trapHandlers: begin clockTraphandler with PID: %d\n", getCurrentPid());
-  //TESTING
-  timeToSwitch--;
-  decrementDelay();
-  if(timeToSwitch == 0) {
-    TracePrintf(1, "trapHandlers: time to switch... scheduling processes now\n");
-    // reset the time until we switch next
-    timeToSwitch = SCHEDULE_DELAY;
-    scheduleProcess();
-  }
+	TracePrintf(1, "trapHandlers: begin clockTraphandler with PID: %d\n", getCurrentPid());
+	if(setAndCheckClockTickPID()) {
+		TracePrintf(1, "trapHandlers: time to switch... scheduling processes now\n");
+		scheduleProcess(0);
+	}
 }
 
 void illegalTrapHandler (ExceptionInfo *info) {
-
   TracePrintf(1, "trapHandlers: Illegal trap handler \n");
   if (info -> code == TRAP_ILLEGAL_ILLOPC) {
       TracePrintf(1, "Illegal Opcode \n");
@@ -167,7 +163,7 @@ void illegalTrapHandler (ExceptionInfo *info) {
   }
 
   else if (info -> code == TRAP_ILLEGAL_KERNELB) {
-      TracePrintf("Linux kernel sent SIGBUS \n");
+      TracePrintf(1, "Linux kernel sent SIGBUS \n");
   }
   else { 
     return; 
@@ -177,7 +173,7 @@ void illegalTrapHandler (ExceptionInfo *info) {
 }
 
 void memoryTrapHandler (ExceptionInfo *info) {
-  TracePrintf(1, "trapHandler: Memory handler \n");
+  /*TracePrintf(1, "trapHandler: Memory handler \n");
   if (info -> code == TRAP_MEMORY_MAPERR) {
     TracePrintf(1, "No mapping at address... trying to grow user stack...");
     struct scheduleNode *head = getHead();
@@ -197,7 +193,7 @@ void memoryTrapHandler (ExceptionInfo *info) {
   }
 
   else if (info -> code == TRAP_MEMORY_KERNEL) {
-    TracePrintf("Linux kernel sent SIGSEGV at addr %p \n", info->addr);
+    TracePrintf(1, "Linux kernel sent SIGSEGV at addr %p \n", info->addr);
     exitHandler(info, info->code);
     return;
   }
@@ -209,7 +205,7 @@ void memoryTrapHandler (ExceptionInfo *info) {
   }
   else { 
     return; 
-  }
+  }*/
 
 }
 
@@ -237,11 +233,11 @@ ttyWriteHandler(ExceptionInfo *info) {
 }
 
 void getPidHandler(ExceptionInfo *info) {
-  info->regs[0] = getCurrentPid();
+  //info->regs[0] = getCurrentPid();
 }
 
 void delayHandler(ExceptionInfo *info) {
-  int ticksToGo = info->regs[1];
+  /*int ticksToGo = info->regs[1];
   struct scheduleNode *currNode = getHead();
   struct processControlBlock *currPCB = currNode->pcb;
   
@@ -256,18 +252,13 @@ void delayHandler(ExceptionInfo *info) {
 
   if(ticksToGo > 0){
     TracePrintf(1, "trapHandlers: In delayHandler... initiating a context switch.\n");
-    scheduleProcess();
+    scheduleProcess(0);
   }
-  return;
+  return;*/
 }
-
-void resetSwitchTime(){
-  timeToSwitch = SCHEDULE_DELAY;
-}
-
 
 void exitHandler(ExceptionInfo *info, int error) {
-  struct scheduleNode *currNode = getHead();
+  /*struct scheduleNode *currNode = getHead();
   int exitType;
   if (error) {
     exitType = ERROR;
@@ -286,5 +277,5 @@ void exitHandler(ExceptionInfo *info, int error) {
     appendChildExitNode(parentPCB, getCurrentPid(), exitType);
   }
   // remove the current node from scheduling and perform scheduling to pick a new process
-  removeExitingProcess();
+  removeExitingProcess();*/
 }

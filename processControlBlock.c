@@ -12,10 +12,10 @@ createNewProcess(int pid, int parentPid){
     pcb -> parentPid = parentPid;
     pcb -> isWaiting = 0;
     pcb -> numChildren = 0;
-    pcb -> isReading = -1;
-    pcb -> isWriting = -1;
-    pcb -> isWaitReading = -1;
-    pcb -> isWaitWriting = -1;
+    pcb -> isReading = 0;
+    pcb -> isWriting = 0;
+    pcb -> isWaitReading = 0;
+    pcb -> isWaitWriting = 0;
     pcb -> noMemory = 0;
     
     addToSchedule(pcb);
@@ -53,9 +53,9 @@ void appendChildExitNode(struct processControlBlock* parentPCB, int pid, int exi
 
     // add new exit node to the PCB starting a new list if needed
     if (currExit != NULL) {
-        while (currExit->next != NULL) {
-        currExit = currExit->next;
-        }
+	while (currExit->next != NULL) {
+		currExit = currExit->next;
+	}
         currExit->next = newExit;     
     } else {
         parentPCB->exitQ = newExit;

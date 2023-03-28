@@ -15,10 +15,12 @@
 #include <comp421/hardware.h>
 #include <comp421/loadinfo.h>
 
+#include "processScheduling.h"
 #include "memoryManagement.h"
 #include "processControlBlock.h"
-#include "loadProgram.h"
 #include "pageTableManagement.h"
+
+#include "loadProgram.h"
 
 /*
  *  Load a program into the current process's address space.  The

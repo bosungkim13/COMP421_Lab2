@@ -1,8 +1,8 @@
-// include headers as needed
-#include "memoryManagement.h"
 #include "pageTableManagement.h"
-#include "processScheduling.h"
 #include "processControlBlock.h"
+#include "processScheduling.h"
+
+#include "memoryManagement.h"
 
 // Initialize integer array to keep track of page status (0 free, 1 used)
 int *isPhysicalPageOccupied = NULL;
@@ -13,6 +13,9 @@ void* stackSwapSpace;
 
 void initKernelBrk(void *origBrk){
 	kernelBrk = origBrk;
+}
+void* getKernelBrk(){
+	return kernelBrk;
 }
 
 void initPhysicalPageArray(unsigned int pmem_size){
@@ -70,11 +73,16 @@ getFreePhysicalPage(){
             return i;
         }
     }
+    TracePrintf(1, "GetFreePhysicalPage - Request for physical page failed because no pages are free. Halting...\n");
     Halt();
 }
 
 unsigned int getTopFreePhysicalPage(){
     int pfn = DOWN_TO_PAGE(VMEM_1_LIMIT - 1) / PAGESIZE;
+    if(isPhysicalPageOccupied[pfn] == 1){
+    	TracePrintf(1, "GetTopFreePhysicalPage - Request for top physical page while top page is already in use! Halting...\n");
+    	Halt();
+    }
     isPhysicalPageOccupied[pfn] = 1;
     return pfn;
 }
@@ -165,7 +173,7 @@ int growUserStack(ExceptionInfo *info, struct scheduleNode *head){
             pcb->pageTable[vpn].pfn = ppn;
         }
         pcb->userStackLimit = (void *)DOWN_TO_PAGE(addr);
-        TracePrintf(2, "memmoryManagement: Grew user stack limiit to %p \n", pcb->userStackLimit);
+        TracePrintf(2, "memoryManagement: Grew user stack limiit to %p \n", pcb->userStackLimit);
         return 1;
     } 
     else{

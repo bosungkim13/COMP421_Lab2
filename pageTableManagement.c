@@ -1,4 +1,6 @@
+#include "processScheduling.h"
 #include "memoryManagement.h"
+
 #include "pageTableManagement.h"
 
 // need to keep track of all the current page tables
@@ -17,7 +19,7 @@ struct pte* initKernelPT(){
 
     kernelPageTable = malloc(PAGE_TABLE_SIZE);
     
-    int endHeap = UP_TO_PAGE((long)kernelBrk - (long)VMEM_1_BASE) / PAGESIZE;
+    int endHeap = UP_TO_PAGE((long)getKernelBrk() - (long)VMEM_1_BASE) / PAGESIZE;
     int endText = ((long)&_etext - (long)VMEM_1_BASE) / PAGESIZE;
     TracePrintf(2, "pageTableManagement: kernel heap ends at vpn: %d kernel text ends at vpn: %d.\n", endHeap, endText);
 
@@ -47,7 +49,6 @@ void initFirstPTRecord(){
   struct pageTableRecord *pageTableRecord = malloc(sizeof(struct pageTableRecord));
 
   void *pageBase = (void *)DOWN_TO_PAGE(VMEM_1_LIMIT - 1);
-  markPagesInRange((void*)(VMEM_1_LIMIT - 1), (void*)(VMEM_1_LIMIT - 1));
 
   pageTableRecord->pageBase = pageBase;
   pageTableRecord->isTopFull = 0;
@@ -189,14 +190,14 @@ void freePageTable(struct pte* pageTable){
   while (curr != NULL) {
     if (curr->pageBase == pageBase) {
         // determine if page table was top or bottom half of physical page
-        if ((void *)pageTable != page_base) {
+        if ((void *)pageTable != pageBase) {
             curr->isTopFull = 0;
         } else {
             curr->isBottomFull = 0;
         }
         // if page is completely empty we can free the entire page
         if (curr->isBottomFull && curr->isTopFull && curr->next == NULL) {
-            freePhysicalPage((long)page_base / PAGESIZE);
+            freePhysicalPage((long)pageBase / PAGESIZE);
             free(curr);
         }
         return;
