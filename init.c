@@ -10,9 +10,21 @@ void testDelay(int amount){
 	printf("Init: Delay returned with value %d\n", Delay(amount));
 }
 
+void testFork(){
+	printf("Test fork Process Initialized.\n");
+
+	int childPid = Fork();
+
+	printf("My Pid is: %d\n", GetPid());
+	printf("child_pid is: %d\n", childPid);
+}
+
 int main() {
 	printf("Init: Initialized and running.\n");
-	
+
+	// test fork
+	testFork();
+	/*
 	// Test delay
 	testDelay(-10);	
 	int i;
@@ -25,10 +37,11 @@ int main() {
 		int j;
 		for(j = 200; !(j >= 0 && j <= 100); j += 7); // Will int overflow. Adjust inc for speed
 	}
+	*/
 	
 	// TODO The true contents of init, once we're done testing.
-	/*
+	
 	while(1) Pause();
-	*/
+	
 	return 0;
 }
