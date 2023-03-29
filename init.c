@@ -4,14 +4,31 @@
 #include <strings.h>
 #include <stdlib.h>
 
-int
-main() {
-    printf("Init Process Initialized.\n");
-	int i = 100;
-	while(i >= 0){
-		printf("Running init process: i = %d\n", i);
-		i--;
-		//Pause();
+
+void testDelay(int amount){
+	printf("Init: Calling Delay with parameter %d\n", amount);
+	printf("Init: Delay returned with value %d\n", Delay(amount));
+}
+
+int main() {
+	printf("Init: Initialized and running.\n");
+	
+	// Test delay
+	testDelay(-10);	
+	int i;
+	for(i = 10; i >= 0; i--){
+		printf("Init (id = %d): i = %d\n", GetPid(), i);
+		testDelay(i);
+		
+		// Just spend some time here, for clock cycles to check that it doesn't switch init out if no other
+		printf("Init: Doing busy work. Idle should not run until Delay!\n");
+		int j;
+		for(j = 200; !(j >= 0 && j <= 100); j += 7); // Will int overflow. Adjust inc for speed
 	}
+	
+	// TODO The true contents of init, once we're done testing.
+	/*
+	while(1) Pause();
+	*/
 	return 0;
 }

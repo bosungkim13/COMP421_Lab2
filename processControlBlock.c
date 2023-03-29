@@ -18,10 +18,10 @@ createNewProcess(int pid, int parentPid){
     pcb -> isWaitWriting = 0;
     pcb -> noMemory = 0;
     
-    addToSchedule(pcb);
     if (pid == IDLE_PID){
         fillInitialPageTable(pcb->pageTable);
     }else{
+    	addToSchedule(pcb);
         fillPageTable(pcb->pageTable);
     }
     

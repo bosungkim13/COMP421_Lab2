@@ -2,8 +2,8 @@
 #include <comp421/yalnix.h>
 #include <stdlib.h>
 
-#define INIT_PID 0
-#define IDLE_PID 1
+#define INIT_PID 1
+#define IDLE_PID 0
 #define IDLE_DELAY -1
 
 struct scheduleNode {
@@ -17,7 +17,7 @@ struct scheduleNode* getHead();
 int getCurrentPid();
 
 int setAndCheckClockTickPID();
-void decreaseDelay();
+int decreaseDelay();
 
 void scheduleProcess(int isExit);
 void chooseNextProcess();

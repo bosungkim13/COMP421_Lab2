@@ -10,6 +10,7 @@ struct processControlBlock* idlePCB;
 struct scheduleNode *head = NULL;
 int nextPid = 2; // first process (not init or idle) will have pid of 2
 int lastClockTickPID = -1;
+int isIdleRunning = 0; // 0 if not running now, 1 if running now
 
 void addToSchedule(struct processControlBlock *pcb){
     struct scheduleNode *newNode = malloc(sizeof(struct scheduleNode));
@@ -18,43 +19,63 @@ void addToSchedule(struct processControlBlock *pcb){
     head = newNode;
 }
 
-struct scheduleNode* getHead(){
-    return head;
-}
 void setIdlePCB(struct processControlBlock* pcb){
 	idlePCB = pcb;
 }
 
+struct scheduleNode* getHead(){
+	return head;
+}
+
 int getCurrentPid(){
-  struct scheduleNode *node = getHead();
-  struct processControlBlock *pcb = node->pcb;
-  return pcb->pid;
+	return isIdleRunning ? idlePCB->pid : head->pcb->pid;
 }
 
 int setAndCheckClockTickPID(){
-	int result = (lastClockTickPID == head->pcb->pid);
-	lastClockTickPID = head->pcb->pid;
+	int pidRunningNow = isIdleRunning == 1 ? idlePCB->pid : head->pcb->pid;
+	int result = (lastClockTickPID == pidRunningNow);
+	TracePrintf(1, "SetAndCheckClockTickPID: Previous tick had pid %d, now setting to pid %d, was%s the same\n",
+	    lastClockTickPID, pidRunningNow, result == 1 ? "" : " not");
+	lastClockTickPID = pidRunningNow;
 	return result;
 }
 
-void decreaseDelay(){
-	TracePrintf(1, "Decreasing delay for all processes\n");
+// Returns 1 if some process had their delay decreased to 0 so could run now
+int decreaseDelay(){
+	int wasZeroed = 0;
+	TracePrintf(1, "DecreasingDelay - Starting\n");
 	struct scheduleNode* current = head;
 	while(current != NULL){
 		if (current->pcb->delay > 0){
+			TracePrintf(1, "DecreaseDelay - Process id %d had delay %d, getting decreased to %d\n",
+			    current->pcb->pid, current->pcb->delay, current->pcb->delay - 1);
 			current->pcb->delay--;
+			if(current->pcb->delay == 0) wasZeroed = 1;
 		}
 		current = current->next;
 	}
+	return wasZeroed;
 }
 
 int isThisProcessBlocked(struct processControlBlock* pcb){
 	return pcb->delay > 0 || pcb->isWaiting || pcb->isReading || pcb->isWriting || pcb->isWaitReading || pcb->isWaitWriting;
 }
 void keepOrIdleProcess(struct processControlBlock* currentPCB){
-	// This may switch from idle to idle, which is pointless, if this gets called while the current process
-	// is idle and all user processes are currently blocked. I don't care and don't feel like checking.
-	if(isThisProcessBlocked(currentPCB)) switchToExistingProcess(currentPCB, idlePCB);
+	if(isIdleRunning == 0){
+		// Idle is not running now. Switch to it if we need it.
+		if(isThisProcessBlocked(currentPCB)){
+			TracePrintf(1, "KeepOrIdleProcess: Switching to idle.\n");
+			isIdleRunning = 1;
+			switchToExistingProcess(currentPCB, idlePCB);
+		}
+	}else{
+		// Idle is running now. Switch away if we can.
+		if(!isThisProcessBlocked(currentPCB)){
+			TracePrintf(1, "KeepOrIdleProcess: Switching away from idle.\n");
+			isIdleRunning = 0;
+			switchToExistingProcess(idlePCB, currentPCB);
+		}
+	}
 }
 
 void scheduleProcess(int isExit){
@@ -64,6 +85,7 @@ void scheduleProcess(int isExit){
 		if (head->next == NULL) {
 			// There are no other processes.
 			// Keep the current process if it's not blocked, switch to idle if it is.
+			TracePrintf(1, "ScheduleProcess - No other processes, switching to idle if current is blocked\n");
 			keepOrIdleProcess(head->pcb);
 			return;
 		}
@@ -77,9 +99,11 @@ void scheduleProcess(int isExit){
 		}
 		if (currentNode == NULL){
 			// All other processes are blocked.
+			TracePrintf(1, "ScheduleProcess - All other processes blocked, switching to idle if current is blocked\n");
 			keepOrIdleProcess(head->pcb);
 			return;
 		}
+		TracePrintf(1, "ScheduleProcess - First non-blocked process has id %d, switching to it\n", currentNode->pcb->pid);
 		
 		// Now currentNode->pcb points to a non-blocked process that is not the current process.
 		// Keep moving the node at the head to the tail until currentNode == head
@@ -88,12 +112,16 @@ void scheduleProcess(int isExit){
 		while(tail->next != NULL) tail = tail->next;
 		// Rotate
 		while(head != currentNode){
-			struct scheduleNode* temp = head;
+			TracePrintf(1, "ScheduleProcess - Rotating list: target pid %d, head pid %d, head->next pid %d, tail pid %d\n",
+			    currentNode->pcb->pid, head->pcb->pid, head->next->pcb->pid, tail->pcb->pid);
+			tail->next = head;
+			tail = tail->next; // Now the process at 'head' is at 'tail'
 			head = head->next;
-			tail->next = temp;
-			tail = tail->next;
-			tail->next = NULL;
+			tail->next = NULL; // Now the 'head' and 'tail' pointers have each moved one
 		}
+		TracePrintf(1, "ScheduleProcess - After list rotating: target pid %d, head pid %d, tail pid %d\n",
+		    currentNode->pcb->pid, head->pcb->pid, tail->pcb->pid);
+		isIdleRunning = 0;
 		switchToExistingProcess(executingNode->pcb, head->pcb);
 		return;
 		

@@ -102,7 +102,8 @@ void forkTrapHandler(ExceptionInfo *info){
 
 void clockTrapHandler (ExceptionInfo *info) {
 	TracePrintf(1, "trapHandlers: begin clockTraphandler with PID: %d\n", getCurrentPid());
-	if(setAndCheckClockTickPID()) {
+	int delayWasSetToZero = decreaseDelay();
+	if(setAndCheckClockTickPID() || (delayWasSetToZero == 1 && getCurrentPid() == IDLE_PID)) {
 		TracePrintf(1, "trapHandlers: time to switch... scheduling processes now\n");
 		scheduleProcess(0);
 	}
@@ -233,28 +234,28 @@ ttyWriteHandler(ExceptionInfo *info) {
 }
 
 void getPidHandler(ExceptionInfo *info) {
-  //info->regs[0] = getCurrentPid();
+	// Will not be correct if idle calls getCurrentPid() since idle isn't in the list, but idle won't call
+	info->regs[0] = getCurrentPid();
 }
 
 void delayHandler(ExceptionInfo *info) {
-  /*int ticksToGo = info->regs[1];
-  struct scheduleNode *currNode = getHead();
-  struct processControlBlock *currPCB = currNode->pcb;
-  
-  // check that we have a valid delay
-  if (ticksToGo < 0){
-    info->regs[0] = ERROR;
-    return;
-  }
-  // set the delay in current process
-  currPCB->delay = ticksToGo;
-  info->regs[0] = 0;
-
-  if(ticksToGo > 0){
-    TracePrintf(1, "trapHandlers: In delayHandler... initiating a context switch.\n");
-    scheduleProcess(0);
-  }
-  return;*/
+	int ticksToGo = info->regs[1];
+	struct processControlBlock *currPCB = getHead()->pcb;
+	
+	// check that we have a valid delay
+	if (ticksToGo < 0){
+		info->regs[0] = ERROR;
+		return;
+	}
+	// set the delay in current process
+	currPCB->delay = ticksToGo;
+	info->regs[0] = 0;
+	
+	if(ticksToGo > 0){
+		TracePrintf(1, "trapHandlers: In delayHandler... initiating a context switch.\n");
+		scheduleProcess(0);
+	}
+	return;
 }
 
 void exitHandler(ExceptionInfo *info, int error) {
