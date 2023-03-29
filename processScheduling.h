@@ -14,6 +14,7 @@ struct scheduleNode {
 void addToSchedule(struct processControlBlock *pcb);
 void setIdlePCB(struct processControlBlock* pcb);
 struct scheduleNode* getHead();
+struct scheduleNode* getRunningNode();
 int getCurrentPid();
 
 int setAndCheckClockTickPID();

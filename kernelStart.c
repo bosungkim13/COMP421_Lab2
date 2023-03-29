@@ -1,6 +1,7 @@
 #include <comp421/hardware.h>
 #include <comp421/yalnix.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "processControlBlock.h"
 #include "processScheduling.h"
@@ -104,7 +105,7 @@ void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, c
         isInit = 0;
         if (cmd_args[0] != NULL){
             if(LoadProgram(cmd_args[0], cmd_args, frame, initPCB) < 0){
-            	TracePrintf(1, "kernelStart: Failed to load %s. Halting...\n", cmd_args[0]);
+            	printf("kernelStart: Failed to load %s. Halting...\n", cmd_args[0]);
             	Halt();
             }
         }
@@ -112,7 +113,7 @@ void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, c
             loadargs[0] = "init";
             loadargs[1] = NULL;
             if(LoadProgram(loadargs[0], loadargs, frame, initPCB) < 0){
-            	TracePrintf(1, "kernelStart: Failed to load %s. Halting...\n", loadargs[0]);
+            	printf("kernelStart: Failed to load %s. Halting...\n", loadargs[0]);
             	Halt();
             }
         }

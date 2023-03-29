@@ -5,8 +5,10 @@
 #include "trapHandlers.h"
 #include "pageTableManagement.h"
 #include "contextSwitch.h"
+#include <stdio.h>
 
 struct processControlBlock* idlePCB;
+struct scheduleNode *idleNode = NULL;
 struct scheduleNode *head = NULL;
 int nextPid = 2; // first process (not init or idle) will have pid of 2
 int lastClockTickPID = -1;
@@ -21,10 +23,17 @@ void addToSchedule(struct processControlBlock *pcb){
 
 void setIdlePCB(struct processControlBlock* pcb){
 	idlePCB = pcb;
+	idleNode = malloc(sizeof(struct scheduleNode));
+	idleNode->next = NULL;
+	idleNode->pcb = idlePCB;
 }
 
 struct scheduleNode* getHead(){
 	return head;
+}
+
+struct scheduleNode* getRunningNode(){
+	return isIdleRunning ? idleNode : head;
 }
 
 int getCurrentPid(){
@@ -143,6 +152,8 @@ void scheduleProcess(int isExit){
 			ContextSwitch(mySwitchFunc, &currPCB->savedContext, (void *)currPCB, (void *)nextPCB);
 		}*/
 	} else{
+		// TODO fix later when working on exit
+		// remove the exiting process
 		struct scheduleNode* currentNode = getHead();
 		struct processControlBlock* currPCB = currentNode->pcb;
 		head = currentNode->next;
@@ -158,7 +169,7 @@ void scheduleProcess(int isExit){
 
 
 void chooseNextProcess(){
-  TracePrintf(1, "processScheduling: Beginning select_next_process.\n");
+  TracePrintf(1, "processScheduling: Beginning chooseNextProcess.\n");
   if (nextProcessToHead(0)) {
     return;
   } else if (nextProcessToHead(IDLE_DELAY)) {
@@ -197,12 +208,12 @@ void removeExitingProcess(){
   struct scheduleNode *currNode = getHead();
 
   if (currNode == NULL) {
-    TracePrintf(1, "processScheduling: Trying to remove an \"exiting\" process when there are no processes.\n");
+    printf("processScheduling: Trying to remove an \"exiting\" process when there are no processes.\n");
     Halt();    
   }
   struct processControlBlock *currPCB = currNode->pcb;
   if (currPCB->pid == IDLE_PID) {
-    TracePrintf(1, "processScheduling: Trying to exit with the idle process.\n");
+    printf("processScheduling: Trying to exit with the idle process.\n");
     Halt();
   }
   scheduleProcess(1);

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "pageTableManagement.h"
 #include "processControlBlock.h"
 #include "processScheduling.h"
@@ -73,14 +74,14 @@ getFreePhysicalPage(){
             return i;
         }
     }
-    TracePrintf(1, "GetFreePhysicalPage - Request for physical page failed because no pages are free. Halting...\n");
+    printf("GetFreePhysicalPage - Request for physical page failed because no pages are free. Halting...\n");
     Halt();
 }
 
 unsigned int getTopFreePhysicalPage(){
     int pfn = DOWN_TO_PAGE(VMEM_1_LIMIT - 1) / PAGESIZE;
     if(isPhysicalPageOccupied[pfn] == 1){
-    	TracePrintf(1, "GetTopFreePhysicalPage - Request for top physical page while top page is already in use! Halting...\n");
+    	printf("GetTopFreePhysicalPage - Request for top physical page while top page is already in use! Halting...\n");
     	Halt();
     }
     isPhysicalPageOccupied[pfn] = 1;

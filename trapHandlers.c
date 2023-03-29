@@ -3,7 +3,7 @@
 #include "memoryManagement.h"
 #include "processControlBlock.h"
 #include "loadProgram.h"
-
+#include "contextSwitch.h"
 #include "trapHandlers.h"
 
 void kernelTrapHandler(ExceptionInfo *info) {
@@ -69,7 +69,7 @@ void execTrapHandler(ExceptionInfo *info){
 }
 
 void forkTrapHandler(ExceptionInfo *info){
-  /*struct scheduleNode *currNode = getHead();
+  struct scheduleNode *currNode = getRunningNode();
   struct processControlBlock *parentPCB = currNode->pcb;
 
   //create child process
@@ -78,8 +78,7 @@ void forkTrapHandler(ExceptionInfo *info){
   struct processControlBlock *childPCB = createNewProcess(childPid, parentPid);
 
   // call contezt switch that copies region 0
-  // "forkFunc" actually doesn't exist. It's just declared in contextSwitch.h. It has no implementation.
-  //ContextSwitch(forkFunc, &parentPCB->savedContext, (void *)parentPCB, (void *)childPCB);
+  ContextSwitch(forkFunc, &parentPCB->savedContext, (void *)parentPCB, (void *)childPCB);
 
   if (parentPCB->noMemory) {
   // if the parent pcb is out of memory then pcb at the head is the child but hte page table and contezt are the parents
@@ -97,7 +96,7 @@ void forkTrapHandler(ExceptionInfo *info){
       info->regs[0] = childPid;
       parentPCB->numChildren++;
     }
-  }*/
+  }
 }
 
 void clockTrapHandler (ExceptionInfo *info) {

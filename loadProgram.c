@@ -251,6 +251,11 @@ LoadProgram(char *name, char **args, ExceptionInfo* programExceptionInfo, struct
     	pcb->pageTable[nextPTE].uprot = PROT_READ | PROT_WRITE;
     	pcb->pageTable[nextPTE].pfn = getFreePhysicalPage();
     }
+
+    // set the brk for current process
+    struct scheduleNode *runningNode = getRunningNode();
+    struct processControlBlock *runningPCB = runningNode->pcb;
+    runningPCB->brk = (void *)UP_TO_PAGE((MEM_INVALID_PAGES + data_bss_npg + text_npg) * PAGESIZE);
     TracePrintf(2, "loadProgram: Finished setting up data/bss pages. Starting user stack pages\n");
 
     /* And finally the user stack pages */
@@ -271,6 +276,8 @@ LoadProgram(char *name, char **args, ExceptionInfo* programExceptionInfo, struct
     	pcb->pageTable[nextPTE].uprot = PROT_READ | PROT_WRITE;
     	pcb->pageTable[nextPTE].pfn = getFreePhysicalPage();
     }
+    // set the user stack limit
+    pcb->userStackLimit = (void *)DOWN_TO_PAGE(USER_STACK_LIMIT);
     TracePrintf(2, "loadProgram: Finished setting up stack pages, the last part of the user page table.\n");
 
     /*

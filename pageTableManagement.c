@@ -1,6 +1,6 @@
 #include "processScheduling.h"
 #include "memoryManagement.h"
-
+#include <stdio.h>
 #include "pageTableManagement.h"
 
 // need to keep track of all the current page tables
@@ -93,12 +93,12 @@ createPageTable(){
             }
         }
     }
-    TracePrintf(3, "pageTableManagement: No space in current page table records... creating new page table record");
+    printf("pageTableManagement: No space in current page table records... creating new page table record");
     // creating new page table record entry, then giving the top half as the new page table
 
     struct pageTableRecord *newPTRecord = malloc(sizeof(struct pageTableRecord));
     if(newPTRecord == NULL){
-    	TracePrintf(2, "Kernel failed malloc for new pageTableRecord, halting ...\n");
+    	printf("Kernel failed malloc for new pageTableRecord, halting ...\n");
     	Halt();
     }
 
@@ -113,7 +113,7 @@ createPageTable(){
     int vpn = 1023;
     for(; vpn >= VMEM_1_BASE/PAGESIZE && kernelPageTable[vpn].valid == 1; vpn--){}
     if(vpn == (VMEM_0_LIMIT-1)/PAGESIZE){
-    	TracePrintf(2, "Kernel failed finding an invalid vpn in the kernel pt to use for accessing the new pageTableRecord, halting ...\n");
+    	printf("Kernel failed finding an invalid vpn in the kernel pt to use for accessing the new pageTableRecord, halting ...\n");
     	Halt();
     }
     kernelPageTable[vpn].valid = 1;
@@ -204,7 +204,7 @@ void freePageTable(struct pte* pageTable){
     }
     curr = curr->next;
   }
-  TracePrintf(0, "pageTableManagement: page %p trying to be freed is not available\n", pageTable);
+  printf("pageTableManagement: page %p trying to be freed is not available\n", pageTable);
   Halt();   
 }
 
