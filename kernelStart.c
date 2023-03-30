@@ -79,7 +79,7 @@ void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, c
     
     initVM();
     TracePrintf(2, "kernelStart: Virtual memory now enabled\n");
-    setupStackSwapSpace();
+    setupPageSwapSpace();
 
     // create the init process
     struct processControlBlock* initPCB = createNewProcess(INIT_PID, ORPHAN_PARENT_PID);
@@ -96,7 +96,8 @@ void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, c
     }
     TracePrintf(2, "kernelStart: Loaded idle program\n");
 
-    ContextSwitch(idleInitFunc, &idlePCB->savedContext, (void*)idlePCB, (void*)initPCB);
+    cloneAndSwitchToProcess(idlePCB, initPCB);
+    //ContextSwitch(idleInitFunc, &idlePCB->savedContext, (void*)idlePCB, (void*)initPCB);
 
 
     // load the init process into one of the copies created by ContextSwitch,
@@ -117,6 +118,7 @@ void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, c
             	Halt();
             }
         }
+        TracePrintf(2, "kernelStart: Loaded init program\n");
     }
 
     // remember to add the setting break stuff to load program and do an IO initialization for later terminals n stuff

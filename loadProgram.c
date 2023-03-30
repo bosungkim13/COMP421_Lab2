@@ -193,14 +193,16 @@ LoadProgram(char *name, char **args, ExceptionInfo* programExceptionInfo, struct
     >>>> of these PTEs to be no longer valid.
     */
     TracePrintf(2, "loadProgram: Starting to free previous physical pages\n");
+    int freedPageCount = 0;
     for(i = 0; i < KERNEL_STACK_BASE/PAGESIZE; i++){
     	//TracePrintf(2, "loadProgram: Free previous pages: i = %d\n", i);
     	if(pcb->pageTable[i].valid == 1){
     		pcb->pageTable[i].valid = 0;
     		freePhysicalPage(pcb->pageTable[i].pfn);
+    		freedPageCount++;
     	}
     }
-    TracePrintf(2, "loadProgram: Finished freeing previous physical pages\n");
+    TracePrintf(2, "loadProgram: Finished freeing previous physical pages, count = %d\n", freedPageCount);
 
     /*
      *  Fill in the page table with the right number of text,

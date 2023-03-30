@@ -79,6 +79,7 @@ void keepOrIdleProcess(struct processControlBlock* currentPCB){
 		}
 	}else{
 		// Idle is running now. Switch away if we can.
+		if(currentPCB == idlePCB) return;
 		if(!isThisProcessBlocked(currentPCB)){
 			TracePrintf(1, "KeepOrIdleProcess: Switching away from idle.\n");
 			isIdleRunning = 0;
@@ -88,9 +89,18 @@ void keepOrIdleProcess(struct processControlBlock* currentPCB){
 }
 
 void scheduleProcess(int isExit){
-	TracePrintf(1, "processScheduling: Scheduling processes...\n");	
+	TracePrintf(1, "processScheduling: Currently running as process %d, scheduling processes...\n", getCurrentPid());
 	// if we are scheduling during a NON exit scenario
 	if (isExit == 0){
+		if(isIdleRunning == 1 && !isThisProcessBlocked(head->pcb)){
+			// Happens when there are many processes to run, but they are all blocked,
+			// and then the one at the head is unblocked and clock ticks.
+			// Without this, the process at the head won't get switched to until another process gets
+			// unblocked and switched to first.
+			isIdleRunning = 0;
+			switchToExistingProcess(idlePCB, head->pcb);
+			return;
+		}
 		if (head->next == NULL) {
 			// There are no other processes.
 			// Keep the current process if it's not blocked, switch to idle if it is.
@@ -109,14 +119,14 @@ void scheduleProcess(int isExit){
 		if (currentNode == NULL){
 			// All other processes are blocked.
 			TracePrintf(1, "ScheduleProcess - All other processes blocked, switching to idle if current is blocked\n");
-			keepOrIdleProcess(head->pcb);
+			keepOrIdleProcess(getRunningNode()->pcb);
 			return;
 		}
 		TracePrintf(1, "ScheduleProcess - First non-blocked process has id %d, switching to it\n", currentNode->pcb->pid);
 		
 		// Now currentNode->pcb points to a non-blocked process that is not the current process.
 		// Keep moving the node at the head to the tail until currentNode == head
-		struct scheduleNode* executingNode = head;
+		struct scheduleNode* executingNode = getRunningNode();
 		struct scheduleNode* tail = head;
 		while(tail->next != NULL) tail = tail->next;
 		// Rotate
@@ -133,109 +143,45 @@ void scheduleProcess(int isExit){
 		isIdleRunning = 0;
 		switchToExistingProcess(executingNode->pcb, head->pcb);
 		return;
-		
-		/*
-		if (currPCB->pid != 1){
-			// move the head node to the tail end
-			if (head->next != NULL && head != NULL){
-				struct scheduleNode *newHead = head->next;
-				while (currNode->next != NULL){
-					currNode = currNode->next;
-				}
-				head->next = NULL;
-				currNode->next = head;
-				head = newHead;
-			}
-			chooseNextProcess();
-			currNode = head;
-			nextPCB = currNode->pcb;
-			ContextSwitch(mySwitchFunc, &currPCB->savedContext, (void *)currPCB, (void *)nextPCB);
-		}*/
 	} else{
-		// TODO fix later when working on exit
-		// remove the exiting process
-		struct scheduleNode* currentNode = getHead();
-		struct processControlBlock* currPCB = currentNode->pcb;
-		head = currentNode->next;
-		
-		chooseNextProcess();
-		struct scheduleNode *nextHead = getHead();
-		struct processControlBlock* nextPCB = nextHead->pcb;
-		
-		switchToExistingProcess(currPCB, nextPCB);
-		//ContextSwitch(mySwitchFunc, &nextPCB->savedContext, (void *)currPCB, (void *)nextPCB);
+		struct scheduleNode* exitingNode = head;
+		head = head->next;
+		// Switch to idle, then switch away as normal
+		// This prevents special case handling for switching away from the exiting process
+		// which isn't in the list
+		isIdleRunning = 1;
+		switchToExistingProcess(exitingNode->pcb, idlePCB);
+		scheduleProcess(0);
 	}
 }
 
-
-void chooseNextProcess(){
-  TracePrintf(1, "processScheduling: Beginning chooseNextProcess.\n");
-  if (nextProcessToHead(0)) {
-    return;
-  } else if (nextProcessToHead(IDLE_DELAY)) {
-    return;
-  }
-  // all processes have delays  
-  Halt(); 
-}
-
-int nextProcessToHead(int delayMatch){
-  struct scheduleNode *currNode = head;
-  struct scheduleNode *prevNode = NULL;
-  TracePrintf(2, "processScheduling: Moving next process to head.\n");
-  while(currNode != NULL) {
-    struct processControlBlock *pcb = currNode->pcb;
-    if(pcb->delay == delayMatch && pcb->isWaiting == 0 && 
-        pcb->isWaitReading == -1 && pcb->isWaitWriting == -1 && pcb->isWriting == -1){
-      if(prevNode == NULL){
-        return 1;
-      } else {
-        prevNode->next = currNode->next;
-        currNode->next = head;
-        head = currNode;
-        return 1;
-      }
-    } else {
-      prevNode = currNode;
-      currNode = currNode->next;
-    }
-  }
-
-  return 0;  
-}
-
 void removeExitingProcess(){
-  struct scheduleNode *currNode = getHead();
-
-  if (currNode == NULL) {
-    printf("processScheduling: Trying to remove an \"exiting\" process when there are no processes.\n");
-    Halt();    
-  }
-  struct processControlBlock *currPCB = currNode->pcb;
-  if (currPCB->pid == IDLE_PID) {
-    printf("processScheduling: Trying to exit with the idle process.\n");
-    Halt();
-  }
-  scheduleProcess(1);
-  TracePrintf(1, "processScheduling: with scheduleNode: %p\n", currNode);
-  TracePrintf(1, "processScheduling: with PCB: %p\n", currPCB);
-  TracePrintf(1, "processScheduling: with page table: %p\n", currPCB->pageTable);
-  
-  // remove the head off the list of processes
-  currNode = getHead();
-  head = currNode->next;
-  freePageTable(currNode->pcb->pageTable);
-  free(currNode->pcb);
-  free(currNode);
-
-  TracePrintf(2, "processScheduling: Completed removal of exiting process.\n");
-
+	struct scheduleNode* currentNode = head; // The head is the node running now. Idle is not stored in
+	// the list, but idle calling Exit() was handled already.
+	if(currentNode->next == NULL){
+		printf("The final user process is exiting. Halting...\n");
+		Halt();
+	}
+	scheduleProcess(1);
+	TracePrintf(1, "processScheduling: with scheduleNode: %p\n", currentNode);
+	TracePrintf(1, "processScheduling: with PCB: %p\n", currentNode->pcb);
+	TracePrintf(1, "processScheduling: with page table: %p\n", currentNode->pcb->pageTable);
+	
+	while(currentNode->pcb->exitQ != NULL){
+		struct exitNode* nowOrphanedExitedChild = currentNode->pcb->exitQ;
+		currentNode->pcb->exitQ = nowOrphanedExitedChild->next;
+		free(nowOrphanedExitedChild);
+	}
+	freePageTable(currentNode->pcb->pageTable);
+	free(currentNode->pcb);
+	free(currentNode);
+	TracePrintf(2, "processScheduling: Completed removal of exiting process.\n");
 }
 
 int updateAndGetNextPid(){
   return nextPid++;
 }
-
+/*
 void removeHead(){
   TracePrintf(2, "processScheduling: Begin to remove head of scheduled processes.\n");
   struct scheduleNode *currHead = getHead();
@@ -245,4 +191,4 @@ void removeHead(){
   free(currHead);
   TracePrintf(2, "processScheduling: End removal to head of scheduled processes.\n");
 }
-
+*/
