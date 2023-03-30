@@ -210,7 +210,68 @@ void memoryTrapHandler (ExceptionInfo *info) {
 }
 
 void mathTrapHandler (ExceptionInfo *info) {
+  TracePrintf(1, "Exception: Math\n");
+  if (info -> code == TRAP_MATH_INTDIV) {
+      printf("%s\n", "Integer divide by zero");
+      Halt();
+      return;
+  }
 
+  if (info -> code == TRAP_MATH_INTOVF) {
+      printf("%s\n", "Integer overflow");
+      Halt();
+      return;
+  }
+
+  if (info -> code == TRAP_MATH_FLTDIV) {
+      printf("%s\n", "Floating divide by zero");
+      Halt();
+      return;
+  }
+
+  if (info -> code == TRAP_MATH_FLTOVF) {
+      printf("%s\n", "Floating overflow");
+      Halt();
+      return;
+  }
+
+  if (info -> code == TRAP_MATH_FLTUND) {
+      printf("%s\n", "Floating underflow");
+      Halt();
+      return;
+  }
+
+  if (info -> code == TRAP_MATH_FLTRES) {
+      printf("%s\n", "Floating inexact result");
+      Halt();
+      return;
+  }
+
+  if (info -> code == TRAP_MATH_FLTINV) {
+      printf("%s\n", "Invalid floating operation");
+      Halt();
+      return;
+  }
+
+  if (info -> code == TRAP_MATH_FLTSUB) {
+      printf("%s\n", "FP subscript out of range");
+      Halt();
+      return;
+  }
+
+  if (info -> code == TRAP_MATH_KERNEL) {
+      printf("%s\n", "Linux kernel sent SIGFPE");
+      Halt();
+      return;
+  }
+
+  if (info -> code == TRAP_MATH_USER) {
+      printf("%s\n", "Received SIGFPE from user");
+      Halt();
+      return;
+  }
+
+  else { return; }
 }
 
 void ttyRecieveTrapHandler (ExceptionInfo *info) {
