@@ -16,7 +16,6 @@ createNewProcess(int pid, int parentPid){
     pcb -> isWriting = 0;
     pcb -> isWaitReading = 0;
     pcb -> isWaitWriting = 0;
-    pcb -> noMemory = 0;
     
     if (pid == IDLE_PID){
         fillInitialPageTable(pcb->pageTable);

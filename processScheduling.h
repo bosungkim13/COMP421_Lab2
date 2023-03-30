@@ -21,8 +21,6 @@ int setAndCheckClockTickPID();
 int decreaseDelay();
 
 void scheduleProcess(int isExit);
-void chooseNextProcess();
-int nextProcessToHead(int delayMatch);
 void removeExitingProcess();
 int updateAndGetNextPid();
-void removeHead();
+//void removeHead();

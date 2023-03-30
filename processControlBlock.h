@@ -18,10 +18,7 @@ struct processControlBlock
   int isWaitReading;
   int isWriting;
   int isWaitWriting;
-  struct exitNode *exitQ;
-  int noMemory;
-
-  // need to add stuff for exit status as well
+  struct exitNode *exitQ; // If not null, needs to be freed when this process exits
 
   // probably need to add some more stuff for the terminal blocking for reading and writing
 };

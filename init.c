@@ -4,44 +4,69 @@
 #include <strings.h>
 #include <stdlib.h>
 
-
 void testDelay(int amount){
-	printf("Init: Calling Delay with parameter %d\n", amount);
-	printf("Init: Delay returned with value %d\n", Delay(amount));
+	printf("Init id %d: Calling Delay with parameter %d\n", GetPid(), amount);
+	printf("Init id %d: Delay returned with value %d\n", GetPid(), Delay(amount));
+}
+void delayCountdownLoop(int start, int busyWorkInc){
+	int i = start;
+	for(; i >= 0; i--){
+		printf("Init id %d: Delay loop i = %d\n", GetPid(), i);
+		testDelay(i);
+		
+		printf("Init id %d: Doing busy work. Idle should not run until Delay!\n", GetPid());
+		int j;
+		for(j = 200; !(j >= 0 && j <= 100); j += busyWorkInc); // Will int overflow. Adjust inc for speed
+	}
 }
 
-void testFork(){
-	printf("Test fork Process Initialized.\n");
+// Returns true if child
+int testFork(){
+	printf("Init id %d: Testing fork...\n", GetPid());
 
 	int childPid = Fork();
 
-	printf("My Pid is: %d\n", GetPid());
-	printf("child_pid is: %d\n", childPid);
+	printf("Init id %d: Fork returned\n", GetPid());
+	printf("Init id %d: childPid is %d\n", GetPid(), childPid);
+	return childPid == 0;
+}
+
+void testExit(){
+	printf("Init id %d: Testing exit\n", GetPid());
+	Exit(0);
 }
 
 int main() {
-	printf("Init: Initialized and running.\n");
+	printf("Init id %d: Initialized and running.\n", GetPid());
 
-	// test fork
+	// Test invalid delay
+	/*testDelay(-10);
+
+	int i = 0;
+	for(; i < 4; i++){
+		printf("Init id %d: Main loop iteration %d\n", GetPid(), i);
+		if(testFork()){
+			// Child
+			//testDelay(12);
+			delayCountdownLoop(i+4, 8-i);
+			break;
+		}else{
+			// Parent, or if fork failed
+			//testDelay(2);
+			delayCountdownLoop(i+5, 5);
+		}
+	}*/
 	testFork();
-	/*
-	// Test delay
-	testDelay(-10);	
-	int i;
-	for(i = 10; i >= 0; i--){
-		printf("Init (id = %d): i = %d\n", GetPid(), i);
-		testDelay(i);
-		
-		// Just spend some time here, for clock cycles to check that it doesn't switch init out if no other
-		printf("Init: Doing busy work. Idle should not run until Delay!\n");
-		int j;
-		for(j = 200; !(j >= 0 && j <= 100); j += 7); // Will int overflow. Adjust inc for speed
-	}
-	*/
+	testFork();
+	testFork();
+	// There should be 8 processes
+	testDelay(12-GetPid());
+	
+	// Test exit
+	testExit();
 	
 	// TODO The true contents of init, once we're done testing.
-	
-	while(1) Pause();
+	//while(1) Pause();
 	
 	return 0;
 }

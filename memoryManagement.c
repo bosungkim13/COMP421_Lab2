@@ -10,7 +10,7 @@ int *isPhysicalPageOccupied = NULL;
 int numPhysicalPages;
 void *kernelBrk = (void *)VMEM_1_BASE;
 int isVMInitialized = 0;
-void* stackSwapSpace;
+void* pageSwapSpace;
 
 void initKernelBrk(void *origBrk){
 	kernelBrk = origBrk;
@@ -99,6 +99,7 @@ void brkHandler(ExceptionInfo *frame){
 int SetKernelBrk(void *addr) {
     int i;
     if (isVMInitialized) {
+    	// TODO - Calling should make kernelBrk = addr, not UP_TO_PAGE(addr). Note kernelBrk is not necessarily page boundary aligned
     	TracePrintf(2, "SetKernelBrk After VM: Requesting address %p, kernelBrk currently at %p\n", addr, kernelBrk);
         int numNeedPages = ((long)UP_TO_PAGE(addr) - (long)kernelBrk)/PAGESIZE;
         if(freePhysicalPageCount() < numNeedPages){
@@ -107,6 +108,10 @@ int SetKernelBrk(void *addr) {
             for (i = 0; i < numNeedPages; i++){
                 unsigned int physicalPageNum = getFreePhysicalPage();
                 int vpn = ((long)kernelBrk - VMEM_1_BASE)/PAGESIZE + i;
+                if(kernelPageTable[vpn].valid == 1){
+                	printf("Kernel tried malloc-ing memory but ran into the descending list of page tables. Halting...\n");
+                	Halt();
+                }
 
                // set the kernel pte as valid and update the corresponding ppn
                 kernelPageTable[vpn].valid = 1;
@@ -149,14 +154,11 @@ void* virtualToPhysicalAddr(void *va){
     return (void*)((long)pPageBase + ((long)va & PAGEOFFSET));
 }
 
-void setupStackSwapSpace(){
-	int numPages = KERNEL_STACK_PAGES;
-	TracePrintf(2, "memoryManagement - setupSwapSpace - Beginning malloc for %d pages worth\n", numPages);
-	stackSwapSpace = malloc(numPages * PAGESIZE);
-	TracePrintf(2, "memoryManagement - setupSwapSpace - Completed malloc for %d pages worth\n", numPages);
+void setupPageSwapSpace(){
+	pageSwapSpace = malloc(PAGESIZE);
 }
-void* getStackSwapSpace(){
-	return stackSwapSpace;
+void* getPageSwapSpace(){
+	return pageSwapSpace;
 }
 
 // return 1 on success 0 on failure

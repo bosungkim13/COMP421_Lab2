@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "processScheduling.h"
 #include "memoryManagement.h"
+#include "pageTableManagement.h"
 #include "processControlBlock.h"
 #include "loadProgram.h"
 #include "contextSwitch.h"
@@ -10,18 +11,19 @@ void kernelTrapHandler(ExceptionInfo *info) {
   TracePrintf(1, "trapHandlers: In TRAP_KERNEL interrupt handler...\n");
 
   int code = info->code;
+  int currentPid = getCurrentPid();
 
   switch (code) {
     case YALNIX_FORK:
-      TracePrintf(1, "trapHandlers: Fork requested.\n");
+      TracePrintf(1, "trapHandlers: Fork requested by process %d.\n", currentPid);
       forkTrapHandler(info);
       break;
     case YALNIX_EXEC:
-      TracePrintf(1, "trapHandlers: Exec requested.\n");
+      TracePrintf(1, "trapHandlers: Exec requested by process %d.\n", currentPid);
       execTrapHandler(info);
       break;
     case YALNIX_EXIT:
-      TracePrintf(1, "trapHandlers: Exit requested.\n");
+      TracePrintf(1, "trapHandlers: Exit requested by process %d.\n", currentPid);
       exitHandler(info, 0);
       break;
     case YALNIX_WAIT:
@@ -29,7 +31,7 @@ void kernelTrapHandler(ExceptionInfo *info) {
       waitTrapHandler(info);
       break;
     case YALNIX_GETPID:
-      TracePrintf(1, "trapHandlers: GetPid requested.\n");
+      TracePrintf(1, "trapHandlers: GetPid requested by process %d.\n", currentPid);
       getPidHandler(info);
       break;
     case YALNIX_BRK:
@@ -37,7 +39,7 @@ void kernelTrapHandler(ExceptionInfo *info) {
       brkHandler(info);
       break;
     case YALNIX_DELAY:
-      TracePrintf(1, "trapHandlers: Delay requested.\n");
+      TracePrintf(1, "trapHandlers: Delay requested by process %d.\n", currentPid);
       delayHandler(info);
       break;
     case YALNIX_TTY_READ:
@@ -69,34 +71,31 @@ void execTrapHandler(ExceptionInfo *info){
 }
 
 void forkTrapHandler(ExceptionInfo *info){
-  struct scheduleNode *currNode = getRunningNode();
-  struct processControlBlock *parentPCB = currNode->pcb;
-
-  //create child process
-  int childPid = updateAndGetNextPid();
-  int parentPid = getCurrentPid();
-  struct processControlBlock *childPCB = createNewProcess(childPid, parentPid);
-
-  // call contezt switch that copies region 0
-  ContextSwitch(forkFunc, &parentPCB->savedContext, (void *)parentPCB, (void *)childPCB);
-
-  if (parentPCB->noMemory) {
-  // if the parent pcb is out of memory then pcb at the head is the child but hte page table and contezt are the parents
-  // in this case, we need to remove the head from the schedule
-    TracePrintf(1, "trapHandlers: in fork handler but not enough memory for region 1 copy.\n");
-    struct scheduleNode *currNode = getHead();
-    // TODO remove the head of the schedule but we should create a function since we cannot modify from this file.
-    removeHead();
-    info->regs[0] = ERROR;
-  } else {
-    // otherwise, return childs pid or return 0 if you are the child
-    if(getCurrentPid() == childPid){
-      info->regs[0] = 0;
-    } else {
-      info->regs[0] = childPid;
-      parentPCB->numChildren++;
-    }
-  }
+	struct scheduleNode* currentNode = getRunningNode();
+	struct processControlBlock* parentPCB = currentNode->pcb;
+	
+	int childPid = updateAndGetNextPid();
+	int parentPid = getCurrentPid();
+	struct processControlBlock *childPCB = createNewProcess(childPid, parentPid);
+	
+	int physicalPagesNeeded = numPagesInUse(parentPCB->pageTable) + KERNEL_STACK_PAGES;
+	int physicalPagesAvailable = freePhysicalPageCount();
+	if (physicalPagesNeeded > physicalPagesAvailable){
+		TracePrintf(1, "Trap Handlers - Fork: In fork handler but not enough free physical pages (%d needed, %d available) for copy\n", physicalPagesNeeded, physicalPagesAvailable);
+		freePageTable(childPCB->pageTable);
+		free(childPCB);
+		info->regs[0] = ERROR;
+		return;
+	}
+	
+	cloneAndSwitchToProcess(parentPCB, childPCB);
+	// Returns as the child first, but we don't need to use that info
+	if(getCurrentPid() == childPid){
+		info->regs[0] = 0;
+	} else {
+		info->regs[0] = childPid;
+		parentPCB->numChildren++;
+	}
 }
 
 void clockTrapHandler (ExceptionInfo *info) {
@@ -318,25 +317,34 @@ void delayHandler(ExceptionInfo *info) {
 	return;
 }
 
-void exitHandler(ExceptionInfo *info, int error) {
-  /*struct scheduleNode *currNode = getHead();
-  int exitType;
-  if (error) {
-    exitType = ERROR;
-  } else {
-    exitType= info->regs[1];
-  }
-
-  TracePrintf(1, "trapHandlers: Process with pid %d attempting to exit\n", currNode->pcb->pid);
-
-  // check that pcb is not an orphan process
-  if (currNode->pcb->parentPid != ORPHAN_PARENT_PID) {
-    struct processControlBlock *parentPCB = getPCB(currNode->pcb->parentPid);
-    TracePrintf(3, "trap_handlers: parent: %d\n", parentPCB->pid);
-    parentPCB->isWaiting = 0;
-    // need to do more bookkeeping to keep track of exiting processes
-    appendChildExitNode(parentPCB, getCurrentPid(), exitType);
-  }
-  // remove the current node from scheduling and perform scheduling to pick a new process
-  removeExitingProcess();*/
+void exitHandler(ExceptionInfo *info, int calledDueToProgramError) {
+	int currentPid = getCurrentPid();
+	if(currentPid == IDLE_PID){
+		printf("Idle process called Exit(). Halting...\n");
+		Halt();
+	}
+	
+	int parentPid = getRunningNode()->pcb->parentPid;
+	int exitType = calledDueToProgramError ? ERROR : (int)(info->regs[1]);
+	
+	TracePrintf(1, "trapHandlers: Process with pid %d attempting to exit\n", currentPid);
+	
+	// Check that pcb is not an orphan process
+	if (parentPid != ORPHAN_PARENT_PID) {
+		struct processControlBlock* parentPCB = getPCB(parentPid);
+		TracePrintf(3, "trap_handlers: parent: %d\n", parentPCB->pid);
+		parentPCB->numChildren--;
+		parentPCB->isWaiting = 0;
+		// need to do more bookkeeping to keep track of exiting processes
+		appendChildExitNode(parentPCB, getCurrentPid(), exitType);
+	}
+	// Orphan this process's children
+	struct scheduleNode* checkingNode = getRunningNode();
+	for(; checkingNode != NULL; checkingNode = checkingNode->next){
+		if(checkingNode->pcb->parentPid == currentPid){
+			checkingNode->pcb->parentPid = ORPHAN_PARENT_PID;
+		}
+	}
+	// Remove the current node and perform scheduling to pick a new process
+	removeExitingProcess();
 }

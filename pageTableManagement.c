@@ -96,11 +96,6 @@ createPageTable(){
     TracePrintf(2, "pageTableManagement: No space in current page table records... creating new page table record");
     // creating new page table record entry, then giving the top half as the new page table
 
-    current = getFirstPageTableRecord();
-    while (current->next != NULL){
-        current = current->next;
-    }
-
     struct pageTableRecord *newPTRecord = malloc(sizeof(struct pageTableRecord));
     if(newPTRecord == NULL){
     	printf("Kernel failed malloc for new pageTableRecord, halting ...\n");
@@ -116,8 +111,8 @@ createPageTable(){
     newPTRecord->next = NULL;
 
     int vpn = (long)(pageBase - VMEM_1_BASE) / PAGESIZE;
-    if(vpn == (VMEM_0_LIMIT-1)/PAGESIZE){
-    	printf("Kernel failed finding an invalid vpn in the kernel pt to use for accessing the new pageTableRecord, halting ...\n");
+    if(kernelPageTable[vpn].valid == 1){
+    	printf("Kernel tried creating new page table virtually contiguous to previous page table, but that vpn was already grown to by kernel malloc. Halting...\n");
     	Halt();
     }
     kernelPageTable[vpn].valid = 1;
@@ -185,32 +180,40 @@ int numPagesInUse(struct pte *pageTable){
 }
 
 void freePageTable(struct pte* pageTable){
-  TracePrintf(1, "pageTableManagement: Freeing page table: %p\n", pageTable);
-  
-  // figure out which page base this page table uses.
-  void *pageBase = (void *)DOWN_TO_PAGE(pageTable);
-
-  // find entry corresponding to page base.
-  struct pageTableRecord *curr = getFirstPageTableRecord();
-  while (curr != NULL) {
-    if (curr->pageBase == pageBase) {
-        // determine if page table was top or bottom half of physical page
-        if ((void *)pageTable != pageBase) {
-            curr->isTopFull = 0;
-        } else {
-            curr->isBottomFull = 0;
-        }
-        // if page is completely empty we can free the entire page
-        if (curr->isBottomFull && curr->isTopFull && curr->next == NULL) {
-            freePhysicalPage((long)pageBase / PAGESIZE);
-            free(curr);
-        }
-        return;
-    }
-    curr = curr->next;
-  }
-  printf("pageTableManagement: page %p trying to be freed is not available\n", pageTable);
-  Halt();   
+	TracePrintf(1, "pageTableManagement: Freeing page table: %p\n", pageTable);
+	
+	int vpn = 0;
+	for(; vpn < VMEM_0_LIMIT/PAGESIZE; vpn++){
+		if(pageTable[vpn].valid == 1){
+			TracePrintf(1, "FreePageTable - Freeing physical page %d found in vpn %d\n", pageTable[vpn].pfn, vpn);
+			freePhysicalPage(pageTable[vpn].pfn);
+		}
+	}
+	
+	// Find the page base and which half is used
+	void* pageBase = (void*)DOWN_TO_PAGE(pageTable);
+	int isBottomOfPage = pageTable == pageBase;
+	
+	// Find entry corresponding to page base
+	struct pageTableRecord* current = getFirstPageTableRecord();
+	struct pageTableRecord* previous = NULL;
+	while (current != NULL) {
+		if (current->pageBase == pageBase) {
+			if (isBottomOfPage) current->isBottomFull = 0;
+			else current->isTopFull = 0;
+			// If the page is now completely empty we can free the entire page
+			if (current->isBottomFull == 0 && current->isTopFull == 0 && current->next == NULL) {
+				freePhysicalPage((long)pageBase / PAGESIZE);
+				free(current);
+				previous->next = NULL; // The first page table record is the only case where
+				// previous == NULL, but the first page table record has the idle page table,
+				// which is never freed.
+			}
+			return;
+		}
+		previous = current;
+		current = current->next;
+	}
+	printf("Page table %p trying to be freed is not in the page record list. Halting...\n", pageTable);
+	Halt();   
 }
-
-

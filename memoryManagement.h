@@ -17,7 +17,6 @@ void markKernelPagesTo(void *end);
 void * virtualToPhysicalAddr(void * va);
 
 void initVM();
-void setupStackSwapSpace();
-void* getStackSwapSpace();
+void setupPageSwapSpace();
+void* getPageSwapSpace();
 int growUserStack(ExceptionInfo *info, struct scheduleNode *head);
-
