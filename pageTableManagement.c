@@ -75,12 +75,12 @@ createPageTable(){
         if (current->isTopFull == 0){
             struct pte *newPT = (struct pte*) ((long)current->pageBase + PAGE_TABLE_SIZE);
             current -> isTopFull = 1;
-            TracePrintf(3, "pageTableManagement: Used top of page to create Page Table\n");
+            TracePrintf(3, "pageTableManagement: Used top of page to create Page Table at %p\n", newPT);
             return newPT;
         } else if (current ->isBottomFull == 0){
             struct pte *newPT = (struct pte*) ((long) current->pageBase);
             current -> isBottomFull = 1;
-            TracePrintf(3, "pageTableManagement: Used bottom of page to create Page Table\n");
+            TracePrintf(3, "pageTableManagement: Used bottom of page to create Page Table at %p\n", newPT);
             return newPT;
         }else{
             if(current->next != NULL){
@@ -93,8 +93,13 @@ createPageTable(){
             }
         }
     }
-    printf("pageTableManagement: No space in current page table records... creating new page table record");
+    TracePrintf(2, "pageTableManagement: No space in current page table records... creating new page table record");
     // creating new page table record entry, then giving the top half as the new page table
+
+    current = getFirstPageTableRecord();
+    while (current->next != NULL){
+        current = current->next;
+    }
 
     struct pageTableRecord *newPTRecord = malloc(sizeof(struct pageTableRecord));
     if(newPTRecord == NULL){
@@ -103,15 +108,14 @@ createPageTable(){
     }
 
     long pfn = getFreePhysicalPage();
-    void *pageBase = (void*)(pfn * PAGESIZE);
+    void *pageBase = (void*)DOWN_TO_PAGE((long)current->pageBase - 1);
 
     newPTRecord->pageBase = pageBase;
     newPTRecord->isTopFull = 1;
     newPTRecord->isBottomFull = 0;
     newPTRecord->next = NULL;
 
-    int vpn = 1023;
-    for(; vpn >= VMEM_1_BASE/PAGESIZE && kernelPageTable[vpn].valid == 1; vpn--){}
+    int vpn = (long)(pageBase - VMEM_1_BASE) / PAGESIZE;
     if(vpn == (VMEM_0_LIMIT-1)/PAGESIZE){
     	printf("Kernel failed finding an invalid vpn in the kernel pt to use for accessing the new pageTableRecord, halting ...\n");
     	Halt();
@@ -121,6 +125,7 @@ createPageTable(){
     current->next = newPTRecord;
 
     struct pte *newPageTable = (struct pte *)((long)pageBase + PAGE_TABLE_SIZE);
+    TracePrintf(3, "pageTableManagement: Created new PT record and used top of page to create Page Table at %p\n", newPageTable);
     return newPageTable;
 }
 
