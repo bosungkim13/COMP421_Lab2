@@ -55,7 +55,26 @@ void kernelTrapHandler(ExceptionInfo *info) {
 }
 
 void waitTrapHandler(ExceptionInfo *info){
+    int *status = (int *)info->regs[1];
 
+    struct scheduleNode *item = getRunningNode();
+    struct processControlBlock *parentPCB = item->pcb;
+
+    struct exitNode *exit = popChildExitNode(parentPCB);
+    if(exit == NULL){
+      if(parentPCB->numChildren == 0){
+        info->regs[0] = (long)NULL;
+        return;
+      }
+      parentPCB->isWaiting = 1;
+
+      // TODO reset the wait time then schedule the next process
+
+      exit = popChildExitNode(parentPCB);
+    }
+
+    *status = exit->exitType;
+    info->regs[0] = exit->pid;
 }
 
 void execTrapHandler(ExceptionInfo *info){
@@ -172,7 +191,8 @@ void illegalTrapHandler (ExceptionInfo *info) {
 }
 
 void memoryTrapHandler (ExceptionInfo *info) {
-  /*TracePrintf(1, "trapHandler: Memory handler \n");
+  /*
+  TracePrintf(1, "trapHandler: Memory handler \n");
   if (info -> code == TRAP_MEMORY_MAPERR) {
     TracePrintf(1, "No mapping at address... trying to grow user stack...");
     struct scheduleNode *head = getHead();
@@ -182,29 +202,30 @@ void memoryTrapHandler (ExceptionInfo *info) {
       return;
     }
     // TODO should I add an exit handler here
-    exitHandler(info, info->code);
+    exitHandler(info, 1);
   }
 
   else if (info -> code == TRAP_MEMORY_ACCERR) {
     TracePrintf(1, "Protection violation at addr %p \n", info->addr);
-    exitHandler(info, info->code);
+    exitHandler(info, 1);
     return;
   }
 
   else if (info -> code == TRAP_MEMORY_KERNEL) {
     TracePrintf(1, "Linux kernel sent SIGSEGV at addr %p \n", info->addr);
-    exitHandler(info, info->code);
+    exitHandler(info, 1);
     return;
   }
 
   else if (info -> code == TRAP_MEMORY_USER) {
     TracePrintf(1, "Received SIGSEGV from user");
-    exitHandler(info, info->code);
+    exitHandler(info, 1);
     return;
   }
   else { 
     return; 
-  }*/
+  }
+  */
 
 }
 

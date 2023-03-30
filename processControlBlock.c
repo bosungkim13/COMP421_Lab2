@@ -60,3 +60,14 @@ void appendChildExitNode(struct processControlBlock* parentPCB, int pid, int exi
         parentPCB->exitQ = newExit;
     }
 }
+
+struct exitNode *popChildExitNode(struct processControlBlock *pcb) {
+    struct exitNode *head = pcb->exitQ;
+    if (head == NULL) {
+        return NULL;
+    } else {
+        pcb->exitQ = head->next;
+        pcb->numChildren--;
+        return head;
+    }
+}

@@ -16,4 +16,4 @@ void memoryTrapHandler (ExceptionInfo *info);
 void mathTrapHandler (ExceptionInfo *info);
 void ttyRecieveTrapHandler (ExceptionInfo *info);
 void ttyTransmitTrapHandler (ExceptionInfo *info);
-
+struct exitNode *popChildExitNode(struct processControlBlock *pcb);

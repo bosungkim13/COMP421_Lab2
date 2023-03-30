@@ -92,10 +92,6 @@ void freePhysicalPage(unsigned int pfn){
 	isPhysicalPageOccupied[pfn] = 0;
 }
 
-void brkHandler(ExceptionInfo *frame){
-    // TODO
-}
-
 int SetKernelBrk(void *addr) {
     int i;
     if (isVMInitialized) {
@@ -184,7 +180,7 @@ int growUserStack(ExceptionInfo *info, struct scheduleNode *head){
     }
 }
 
-void brk_handler(ExceptionInfo *info){ 
+void brkHandler(ExceptionInfo *info){ 
     void *addr = (void *)info->regs[1];
     int i;
 
