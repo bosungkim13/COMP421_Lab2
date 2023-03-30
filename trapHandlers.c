@@ -167,7 +167,7 @@ void illegalTrapHandler (ExceptionInfo *info) {
   else { 
     return; 
   }
-  exitHandler(info, info->code);
+  exitHandler(info, 1);
   return;
 }
 
@@ -212,61 +212,61 @@ void mathTrapHandler (ExceptionInfo *info) {
   TracePrintf(1, "Exception: Math\n");
   if (info -> code == TRAP_MATH_INTDIV) {
       printf("%s\n", "Integer divide by zero");
-      Halt();
+      exitHandler(info, 1);
       return;
   }
 
   if (info -> code == TRAP_MATH_INTOVF) {
       printf("%s\n", "Integer overflow");
-      Halt();
+      exitHandler(info, 1);
       return;
   }
 
   if (info -> code == TRAP_MATH_FLTDIV) {
       printf("%s\n", "Floating divide by zero");
-      Halt();
+      exitHandler(info, 1);
       return;
   }
 
   if (info -> code == TRAP_MATH_FLTOVF) {
       printf("%s\n", "Floating overflow");
-      Halt();
+      exitHandler(info, 1);
       return;
   }
 
   if (info -> code == TRAP_MATH_FLTUND) {
       printf("%s\n", "Floating underflow");
-      Halt();
+      exitHandler(info, 1);
       return;
   }
 
   if (info -> code == TRAP_MATH_FLTRES) {
       printf("%s\n", "Floating inexact result");
-      Halt();
+      exitHandler(info, 1);
       return;
   }
 
   if (info -> code == TRAP_MATH_FLTINV) {
       printf("%s\n", "Invalid floating operation");
-      Halt();
+      exitHandler(info, 1);
       return;
   }
 
   if (info -> code == TRAP_MATH_FLTSUB) {
       printf("%s\n", "FP subscript out of range");
-      Halt();
+      exitHandler(info, 1);
       return;
   }
 
   if (info -> code == TRAP_MATH_KERNEL) {
       printf("%s\n", "Linux kernel sent SIGFPE");
-      Halt();
+      exitHandler(info, 1);
       return;
   }
 
   if (info -> code == TRAP_MATH_USER) {
       printf("%s\n", "Received SIGFPE from user");
-      Halt();
+      exitHandler(info, 1);
       return;
   }
 
@@ -332,7 +332,7 @@ void exitHandler(ExceptionInfo *info, int calledDueToProgramError) {
 	// Check that pcb is not an orphan process
 	if (parentPid != ORPHAN_PARENT_PID) {
 		struct processControlBlock* parentPCB = getPCB(parentPid);
-		TracePrintf(3, "trap_handlers: parent: %d\n", parentPCB->pid);
+		TracePrintf(3, "trapHandlers: parent: %d\n", parentPCB->pid);
 		parentPCB->numChildren--;
 		parentPCB->isWaiting = 0;
 		// need to do more bookkeeping to keep track of exiting processes

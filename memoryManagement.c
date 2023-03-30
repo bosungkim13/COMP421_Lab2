@@ -184,55 +184,57 @@ int growUserStack(ExceptionInfo *info, struct scheduleNode *head){
     }
 }
 
-void
-brk_handler(ExceptionInfo *info){ 
-  void *addr = (void *)info->regs[1];
-  int i;
+void brk_handler(ExceptionInfo *info){ 
+    void *addr = (void *)info->regs[1];
+    int i;
 
-  if(UP_TO_PAGE(addr) <= MEM_INVALID_SIZE){
-    info->regs[0] = ERROR;
-    return;
-  }
-
-  struct scheduleNode *item = ;
-  struct process_control_block *pcb = item->pcb;
-  void *brk = pcb->brk;
-  void *user_stack_limit = pcb->user_stack_limit;
-  struct pte *user_page_table = pcb->page_table;
-
-  if(UP_TO_PAGE(addr) >= DOWN_TO_PAGE(user_stack_limit) -1){
-    frame->regs[0] = ERROR;
-    return;
-  }
-
-  if(UP_TO_PAGE(addr) > UP_TO_PAGE(brk)){
-
-    int num_pages_required = ((long)UP_TO_PAGE(addr) - (long)UP_TO_PAGE(brk))/PAGESIZE;
-    if(num_free_physical_pages() < num_pages_required){
-      frame->regs[0] = ERROR;
-      return;
-    } else {
-      TracePrintf(3, "memory_management: preparing to acquire %d physical pages\n", num_pages_required);
-      for(i = 0; i < num_pages_required; i++) {
-        unsigned int physical_page_number = acquire_free_physical_page();
-        int vpn = (long)UP_TO_PAGE(brk)/PAGESIZE + i;
-        user_page_table[vpn].valid = 1;
-        user_page_table[vpn].pfn = physical_page_number;
-      }
+    // invalid addr
+    if(UP_TO_PAGE(addr) <= MEM_INVALID_SIZE){
+        info->regs[0] = ERROR;
+        return;
     }
-  } else if(UP_TO_PAGE(addr) < UP_TO_PAGE(brk)){
-    int num_pages_to_free = ((long)UP_TO_PAGE(brk) - (long)UP_TO_PAGE(addr))/PAGESIZE;
-  
-    TracePrintf(3, "memory_management: preparing to free %d physical pages\n", num_pages_to_free);
-    for(i = 0; i < num_pages_to_free; i++){
-      user_page_table[(long)UP_TO_PAGE(brk)/PAGESIZE - i].valid = 0;
-      int physical_page_number = user_page_table[(long)UP_TO_PAGE(brk)/PAGESIZE - i].pfn;
-      free_physical_page(physical_page_number);
+
+    struct scheduleNode *item = getRunningNode();
+    struct processControlBlock *pcb = item->pcb;
+    void *brk = pcb->brk;
+    void *userStackLimit = pcb->userStackLimit;
+    struct pte *userPT = pcb->pageTable;
+
+    // invalid addr
+    if(UP_TO_PAGE(addr) >= DOWN_TO_PAGE(userStackLimit) -1){
+        info->regs[0] = ERROR;
+        return;
     }
-  }
 
-  frame->regs[0] = 0;
-  pcb->brk = (void *)UP_TO_PAGE(addr);
+    if(UP_TO_PAGE(addr) > UP_TO_PAGE(brk)){
 
-  TracePrintf(1, "memory_management: brk_handler finished\n");
-}
+        int numNeededPages = ((long)UP_TO_PAGE(addr) - (long)UP_TO_PAGE(brk))/PAGESIZE;
+        // not enough physical memory
+        if(freePhysicalPageCount() < numNeededPages){
+            info->regs[0] = ERROR;
+            return;
+        } else {
+        TracePrintf(3, "memoryManagement: Getting %d physical pages...\n", numNeededPages);
+        for(i = 0; i < numNeededPages; i++) {
+            unsigned int ppn = getFreePhysicalPage();
+            int vpn = (long)UP_TO_PAGE(brk)/PAGESIZE + i;
+            userPT[vpn].valid = 1;
+            userPT[vpn].pfn = ppn;
+        }
+        }
+    // we can free pages that we don't need anymore
+    } else if(UP_TO_PAGE(addr) < UP_TO_PAGE(brk)){
+        int numPagesFree = ((long)UP_TO_PAGE(brk) - (long)UP_TO_PAGE(addr))/PAGESIZE;
+        TracePrintf(3, "memoryManagement: Freeing %d physical pages...\n", numPagesFree);
+        for(i = 0; i < numPagesFree; i++){
+            userPT[(long)UP_TO_PAGE(brk)/PAGESIZE - i].valid = 0;
+            int ppn = userPT[(long)UP_TO_PAGE(brk)/PAGESIZE - i].pfn;
+            freePhysicalPage(ppn);
+        }
+    }
+
+    info->regs[0] = 0;
+    pcb->brk = (void *)UP_TO_PAGE(addr);
+
+    TracePrintf(3, "memoryManagement: brk_handler execution completed\n");
+    }

@@ -12,7 +12,7 @@ void markPagesInRange(void *start, void *end);
 unsigned int getFreePhysicalPage();
 unsigned int getTopFreePhysicalPage();
 void freePhysicalPage(unsigned int pfn);
-void brkHandler(ExceptionInfo *frame);
+void brkHandler(ExceptionInfo *info);
 void markKernelPagesTo(void *end);
 void * virtualToPhysicalAddr(void * va);
 
