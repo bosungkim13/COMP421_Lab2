@@ -200,17 +200,17 @@ void mathTrapHandler (ExceptionInfo *info) {
 
 	TracePrintf(1, "Exception: Math\n");
 	
-	if (info -> code == TRAP_MATH_INTDIV) printf("%s\n", "Integer divide by zero");
-	else if (info -> code == TRAP_MATH_INTOVF) printf("%s\n", "Integer overflow");
-	else if (info -> code == TRAP_MATH_FLTDIV) printf("%s\n", "Floating divide by zero");
-	else if (info -> code == TRAP_MATH_FLTOVF) printf("%s\n", "Floating overflow");
-	else if (info -> code == TRAP_MATH_FLTUND) printf("%s\n", "Floating underflow");
-	else if (info -> code == TRAP_MATH_FLTRES) printf("%s\n", "Floating inexact result");
-	else if (info -> code == TRAP_MATH_FLTINV) printf("%s\n", "Invalid floating operation");
-	else if (info -> code == TRAP_MATH_FLTSUB) printf("%s\n", "FP subscript out of range");
-	else if (info -> code == TRAP_MATH_KERNEL) printf("%s\n", "Linux kernel sent SIGFPE");
-	else if (info -> code == TRAP_MATH_USER) printf("%s\n", "Received SIGFPE from user");
-	else printf("%s\n", "Some other math error occured");
+	if (info -> code == TRAP_MATH_INTDIV) printf("Process %d terminating - %s\n", getCurrentPid(), "Integer divide by zero");
+	else if (info -> code == TRAP_MATH_INTOVF) printf("Process %d terminating - %s\n", getCurrentPid(), "Integer overflow");
+	else if (info -> code == TRAP_MATH_FLTDIV) printf("Process %d terminating - %s\n", getCurrentPid(), "Floating divide by zero");
+	else if (info -> code == TRAP_MATH_FLTOVF) printf("Process %d terminating - %s\n", getCurrentPid(), "Floating overflow");
+	else if (info -> code == TRAP_MATH_FLTUND) printf("Process %d terminating - %s\n", getCurrentPid(), "Floating underflow");
+	else if (info -> code == TRAP_MATH_FLTRES) printf("Process %d terminating - %s\n", getCurrentPid(), "Floating inexact result");
+	else if (info -> code == TRAP_MATH_FLTINV) printf("Process %d terminating - %s\n", getCurrentPid(), "Invalid floating operation");
+	else if (info -> code == TRAP_MATH_FLTSUB) printf("Process %d terminating - %s\n", getCurrentPid(), "FP subscript out of range");
+	else if (info -> code == TRAP_MATH_KERNEL) printf("Process %d terminating - %s\n", getCurrentPid(), "Linux kernel sent SIGFPE");
+	else if (info -> code == TRAP_MATH_USER) printf("Process %d terminating - %s\n", getCurrentPid(), "Received SIGFPE from user");
+	else printf("Process %d terminating - %s\n", getCurrentPid(), "Some other math error occured");
 	
 	exitHandler(info, 1);
 }
