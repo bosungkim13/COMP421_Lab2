@@ -52,14 +52,26 @@ int main() {
 	//testDelay(-10);
 
 	// All calls test
-	int i = 0;
+	/*int i = 0;
 	for(; i < 5; i++){
 		printf("Init id %d: Main loop iteration %d\n", GetPid(), i);
 		testFork();
 		testDelay(i);//delayCountdownLoop(i, 8-i);
 	}
 	while(testWait());
-	testExit(GetPid());
+	testExit(GetPid());*/
+	
+	int i = 0;
+	for(; i < 100; i++){
+		int j = 0;
+		for(; j < 4; j++){
+			if(testFork()){
+				testDelay(2);
+				testExit(GetPid());
+			}
+		}
+		while(testWait());
+	}
 	
 	// TODO The true contents of init, once we're done testing.
 	//while(1) Pause();

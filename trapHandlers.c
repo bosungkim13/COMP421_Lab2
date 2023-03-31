@@ -112,7 +112,7 @@ void forkTrapHandler(ExceptionInfo *info){
 	}
 	
 	parentPCB->numChildren++;
-	TracePrintf(1, "Trap Handlers - Fork: Parent pcb %d now has %d running children\n", parentPCB->pid, parentPCB->pid);
+	TracePrintf(1, "Trap Handlers - Fork: Parent pcb %d now has %d running children\n", parentPCB->pid, parentPCB->numChildren);
 	cloneAndSwitchToProcess(parentPCB, childPCB);
 	// Returns as the child first, but we don't need to use that info
 	if(getCurrentPid() == childPid){

@@ -14,6 +14,7 @@ SavedContext* switchProcessFunction(SavedContext* context, void* p1, void* p2){
 }
 void switchToExistingProcess(struct processControlBlock* currentPCB, struct processControlBlock* targetPCB){
 	ContextSwitch(switchProcessFunction, &currentPCB->savedContext, (void*)currentPCB, (void*)targetPCB);
+	tryFreeSwitchedAwayExitingProcess();
 }
 
 // First copy process 1's kernel stack over to process 2. Then, switches context from process 1 to process 2.

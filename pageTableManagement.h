@@ -8,6 +8,7 @@
 //  the top of REGION_1.
 struct pageTableRecord{
     void *pageBase;
+    int pfnUsed;
     int isTopFull;
     int isBottomFull;
     struct pageTableRecord *next;

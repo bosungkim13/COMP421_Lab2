@@ -23,4 +23,4 @@ int decreaseDelay();
 void scheduleProcess(int isExit);
 void removeExitingProcess();
 int updateAndGetNextPid();
-//void removeHead();
+void tryFreeSwitchedAwayExitingProcess();

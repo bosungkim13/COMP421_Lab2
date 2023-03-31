@@ -13,6 +13,7 @@ struct scheduleNode *head = NULL;
 int nextPid = 2; // first process (not init or idle) will have pid of 2
 int lastClockTickPID = -1;
 int isIdleRunning = 0; // 0 if not running now, 1 if running now
+struct scheduleNode* processExitingNow = NULL;
 
 void addToSchedule(struct processControlBlock *pcb){
     struct scheduleNode *newNode = malloc(sizeof(struct scheduleNode));
@@ -156,29 +157,48 @@ void scheduleProcess(int isExit){
 }
 
 void removeExitingProcess(){
-	struct scheduleNode* currentNode = head; // The head is the node running now. Idle is not stored in
+	if(processExitingNow != NULL){
+		// Only happens for pid 2, the first process made by fork, for some reason. All others
+		// use the one in switchToExistingProcess as intended
+		TracePrintf(1, "ProcessScheduling - Remove Exiting Process: Trying to exit with process %d, but have not yet cleaned up previously exited process %d! Cleaning up now...\n", head->pcb->pid, processExitingNow->pcb->pid);
+		tryFreeSwitchedAwayExitingProcess();
+	}
+	processExitingNow = head; // The head is the node running now. Idle is not stored in
 	// the list, but idle calling Exit() was handled already.
-	if(currentNode->next == NULL){
+	if(processExitingNow->next == NULL){
 		printf("The final user process is exiting. Halting...\n");
 		Halt();
 	}
+	TracePrintf(1, "ProcessScheduling - Remove Exiting Process: Before context switch away from exiting process %d\n", processExitingNow->pcb->pid);
 	scheduleProcess(1);
-	TracePrintf(1, "processScheduling: with scheduleNode: %p\n", currentNode);
-	TracePrintf(1, "processScheduling: with PCB: %p\n", currentNode->pcb);
-	TracePrintf(1, "processScheduling: with page table: %p\n", currentNode->pcb->pageTable);
+	// CODE BELOW HERE WILL NEVER RUN
+	// PUT CODE YOU WANT TO PUT HERE IN tryFreeSwitchedAwayExitingProcess
+}
+void tryFreeSwitchedAwayExitingProcess(){
+	if(processExitingNow == NULL) return;
 	
-	while(currentNode->pcb->exitQ != NULL){
-		struct exitNode* nowOrphanedExitedChild = currentNode->pcb->exitQ;
-		currentNode->pcb->exitQ = nowOrphanedExitedChild->next;
+	int id = processExitingNow->pcb->pid;
+	TracePrintf(1, "ProcessScheduling - Remove Exiting Process: After context switch away from exiting process %d\n", id);
+	TracePrintf(1, "processScheduling: with scheduleNode: %p\n", processExitingNow);
+	TracePrintf(1, "processScheduling: with PCB: %p\n", processExitingNow->pcb);
+	TracePrintf(1, "processScheduling: with page table: %p\n", processExitingNow->pcb->pageTable);
+	
+	while(processExitingNow->pcb->exitQ != NULL){
+		TracePrintf(1, "ProcessScheduling - Remove Exiting Process %d: Current exit queue %p, exit queue->next %p\n", id, processExitingNow->pcb->exitQ, processExitingNow->pcb->exitQ->next);
+		struct exitNode* nowOrphanedExitedChild = processExitingNow->pcb->exitQ;
+		processExitingNow->pcb->exitQ = nowOrphanedExitedChild->next;
 		free(nowOrphanedExitedChild);
 	}
-	freePageTable(currentNode->pcb->pageTable);
-	free(currentNode->pcb);
-	free(currentNode);
-	TracePrintf(2, "processScheduling: Completed removal of exiting process.\n");
+	TracePrintf(1, "ProcessScheduling - Remove Exiting Process %d: Freed exit queue of children\n", id);
+	freePageTable(processExitingNow->pcb->pageTable);
+	TracePrintf(1, "ProcessScheduling - Remove Exiting Process %d: Freed page table\n", id);
+	free(processExitingNow->pcb);
+	TracePrintf(1, "ProcessScheduling - Remove Exiting Process %d: Freed pcb\n", id);
+	free(processExitingNow);
+	TracePrintf(2, "processScheduling: Completed removal of exiting process %d.\n", id);
+	processExitingNow = NULL;
 }
 
 int updateAndGetNextPid(){
   return nextPid++;
 }
-

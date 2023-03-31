@@ -49,13 +49,13 @@ void initFirstPTRecord(){
   struct pageTableRecord *pageTableRecord = malloc(sizeof(struct pageTableRecord));
 
   void *pageBase = (void *)DOWN_TO_PAGE(VMEM_1_LIMIT - 1);
+  unsigned int pfn = getTopFreePhysicalPage();
 
   pageTableRecord->pageBase = pageBase;
+  pageTableRecord->pfnUsed = pfn;
   pageTableRecord->isTopFull = 0;
   pageTableRecord->isBottomFull = 0;
   pageTableRecord->next = NULL;
-
-  unsigned int pfn = getTopFreePhysicalPage();
 
   int virtualPageNum = (long)(pageBase - VMEM_1_BASE)/PAGESIZE;
 
@@ -72,7 +72,8 @@ createPageTable(){
     TracePrintf(3, "pageTableManagement: Started creating page table\n");
     struct pageTableRecord *current = getFirstPageTableRecord();
     while (1){
-        if (current->isTopFull == 0){
+    	TracePrintf(1, "CreatePageTable: Current %p, Current->pageBase %p, Current->next %p, Top full? %s, Bottom full? %s\n", current, current->pageBase, current->next, current->isTopFull == 1 ? "yes" : "no", current->isBottomFull == 1 ? "yes" : "no");
+    	if (current->isTopFull == 0){
             struct pte *newPT = (struct pte*) ((long)current->pageBase + PAGE_TABLE_SIZE);
             current -> isTopFull = 1;
             TracePrintf(3, "pageTableManagement: Used top of page to create Page Table at %p\n", newPT);
@@ -106,15 +107,16 @@ createPageTable(){
     void *pageBase = (void*)DOWN_TO_PAGE((long)current->pageBase - 1);
 
     newPTRecord->pageBase = pageBase;
+    newPTRecord->pfnUsed = pfn;
     newPTRecord->isTopFull = 1;
     newPTRecord->isBottomFull = 0;
     newPTRecord->next = NULL;
 
     int vpn = (long)(pageBase - VMEM_1_BASE) / PAGESIZE;
-    if(kernelPageTable[vpn].valid == 1){
-    	printf("Kernel tried creating new page table virtually contiguous to previous page table, but that vpn was already grown to by kernel malloc. Halting...\n");
+    /*if(kernelPageTable[vpn].valid == 1){
+    	printf("Kernel tried creating new page table virtually contiguous to previous page table, but that vpn %d was already grown to by kernel malloc. Halting...\n", vpn);
     	Halt();
-    }
+    }*/
     kernelPageTable[vpn].valid = 1;
     kernelPageTable[vpn].pfn = pfn;
     current->next = newPTRecord;
@@ -197,21 +199,32 @@ void freePageTable(struct pte* pageTable){
 	// Find the page base and which half is used
 	void* pageBase = (void*)DOWN_TO_PAGE(pageTable);
 	int isBottomOfPage = pageTable == pageBase;
-	
+	TracePrintf(1, "FreePageTable: Freeing page table %p - Page base %p, is %sbottom\n", pageTable, pageBase, isBottomOfPage == 1 ? "" : "not ");
 	// Find entry corresponding to page base
 	struct pageTableRecord* current = getFirstPageTableRecord();
 	struct pageTableRecord* previous = NULL;
 	while (current != NULL) {
+		TracePrintf(1, "FreePageTable: Looping over page table records. current %p, current->next %p, previous %p\n", current, current->next, previous);
 		if (current->pageBase == pageBase) {
-			if (isBottomOfPage) current->isBottomFull = 0;
-			else current->isTopFull = 0;
+			if (isBottomOfPage){
+				current->isBottomFull = 0;
+				TracePrintf(1, "FreePageTable: Marking bottom of %p empty\n", current->pageBase);
+			}else{
+				current->isTopFull = 0;
+				TracePrintf(1, "FreePageTable: Marking top of %p empty\n", current->pageBase);
+			}
 			// If the page is now completely empty we can free the entire page
 			if (current->isBottomFull == 0 && current->isTopFull == 0 && current->next == NULL) {
-				freePhysicalPage((long)pageBase / PAGESIZE);
+				TracePrintf(1, "FreePageTable: Page with base %p is now completely free\n", current->pageBase);
+				freePhysicalPage(current->pfnUsed);
 				free(current);
 				previous->next = NULL; // The first page table record is the only case where
 				// previous == NULL, but the first page table record has the idle page table,
 				// which is never freed.
+				TracePrintf(1, "FreePageTable: Clearing kernel pte at vpn %d\n", (long)pageBase/PAGESIZE);
+				kernelPageTable[(long)pageBase/PAGESIZE].valid = 0;
+				WriteRegister(REG_TLB_FLUSH, (RCS421RegVal)pageBase);
+				TracePrintf(1, "FreePageTable: Flushed TLB for cleared pte at vpn %d\n", (long)pageBase/PAGESIZE);
 			}
 			return;
 		}

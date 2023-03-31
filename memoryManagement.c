@@ -89,7 +89,12 @@ unsigned int getTopFreePhysicalPage(){
 }
 
 void freePhysicalPage(unsigned int pfn){
+	if(isPhysicalPageOccupied[pfn] == 0){
+		printf("Freeing physical page %d which is already free! Halting...\n", pfn);
+		Halt();
+	}
 	isPhysicalPageOccupied[pfn] = 0;
+	TracePrintf(1, "FreePhysicalPage: Freed physical page %d\n", pfn);
 }
 
 int SetKernelBrk(void *addr) {
