@@ -25,7 +25,7 @@
 #	For example, the Makefile will make test1 out of test1.c,
 #	if you have a file named test1.c in this directory.
 #
-ALL = yalnix idle init providedTests/bigstack providedTests/blowstack providedTests/brktest providedTests/console providedTests/delaytest providedTests/exectest providedTests/forktest0 providedTests/forktest1 providedTests/forktest1b providedTests/forktest2 providedTests/forktest2b providedTests/forktest3 providedTests/forkwait0c providedTests/forkwait0p providedTests/forkwait1 providedTests/forkwait1b providedTests/forkwait1c providedTests/forkwait1d providedTests/init providedTests/init1 providedTests/init2 providedTests/init3 providedTests/shell providedTests/trapillegal providedTests/trapmath providedTests/trapmemory providedTests/ttyread1 providedTests/ttywrite1 providedTests/ttywrite2 providedTests/ttywrite3 testTTYRead testTTYWrite
+ALL = yalnix idle init providedTests/bigstack providedTests/blowstack providedTests/brktest providedTests/console providedTests/delaytest providedTests/exectest providedTests/forktest0 providedTests/forktest1 providedTests/forktest1b providedTests/forktest2 providedTests/forktest2b providedTests/forktest3 providedTests/forkwait0c providedTests/forkwait0p providedTests/forkwait1 providedTests/forkwait1b providedTests/forkwait1c providedTests/forkwait1d providedTests/init providedTests/init1 providedTests/init2 providedTests/init3 providedTests/shell providedTests/trapillegal providedTests/trapmath providedTests/trapmemory providedTests/ttyread1 providedTests/ttywrite1 providedTests/ttywrite2 providedTests/ttywrite3 testTTYRead testTTYWrite testTTYWrite2
 
 #
 #	You must modify the KERNEL_OBJS and KERNEL_SRCS definitions
