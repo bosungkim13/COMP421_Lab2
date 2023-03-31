@@ -111,7 +111,7 @@ void forkTrapHandler(ExceptionInfo *info){
 		return;
 	}
 
-  int childPid = updateAndGetNextPid();
+	int childPid = updateAndGetNextPid();
 	int parentPid = getCurrentPid();
 	struct processControlBlock *childPCB = createNewProcess(childPid, parentPid);
 	
