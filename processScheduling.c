@@ -161,7 +161,7 @@ void removeExitingProcess(){
 		// Only happens for pid 2, the first process made by fork, for some reason. All others
 		// use the one in switchToExistingProcess as intended
 		TracePrintf(1, "ProcessScheduling - Remove Exiting Process: Trying to exit with process %d, but have not yet cleaned up previously exited process %d! Cleaning up now...\n", head->pcb->pid, processExitingNow->pcb->pid);
-		tryFreeSwitchedAwayExitingProcess();
+		Halt();
 	}
 	processExitingNow = head; // The head is the node running now. Idle is not stored in
 	// the list, but idle calling Exit() was handled already.
@@ -182,13 +182,14 @@ void tryFreeSwitchedAwayExitingProcess(){
 	TracePrintf(1, "processScheduling: with scheduleNode: %p\n", processExitingNow);
 	TracePrintf(1, "processScheduling: with PCB: %p\n", processExitingNow->pcb);
 	TracePrintf(1, "processScheduling: with page table: %p\n", processExitingNow->pcb->pageTable);
-	
+	/*
 	while(processExitingNow->pcb->exitQ != NULL){
 		TracePrintf(1, "ProcessScheduling - Remove Exiting Process %d: Current exit queue %p, exit queue->next %p\n", id, processExitingNow->pcb->exitQ, processExitingNow->pcb->exitQ->next);
 		struct exitNode* nowOrphanedExitedChild = processExitingNow->pcb->exitQ;
 		processExitingNow->pcb->exitQ = nowOrphanedExitedChild->next;
 		free(nowOrphanedExitedChild);
 	}
+	*/
 	TracePrintf(1, "ProcessScheduling - Remove Exiting Process %d: Freed exit queue of children\n", id);
 	freePageTable(processExitingNow->pcb->pageTable);
 	TracePrintf(1, "ProcessScheduling - Remove Exiting Process %d: Freed page table\n", id);
@@ -196,6 +197,7 @@ void tryFreeSwitchedAwayExitingProcess(){
 	TracePrintf(1, "ProcessScheduling - Remove Exiting Process %d: Freed pcb\n", id);
 	free(processExitingNow);
 	TracePrintf(2, "processScheduling: Completed removal of exiting process %d.\n", id);
+	
 	processExitingNow = NULL;
 }
 
