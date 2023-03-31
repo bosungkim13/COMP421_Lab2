@@ -24,3 +24,6 @@ void scheduleProcess(int isExit);
 void removeExitingProcess();
 int updateAndGetNextPid();
 void tryFreeSwitchedAwayExitingProcess();
+struct processControlBlock* getWritingPCB(int term);
+void wakeUpReader(int term);
+void wakeUpWriter(int term);
