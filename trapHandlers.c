@@ -6,6 +6,7 @@
 #include "loadProgram.h"
 #include "contextSwitch.h"
 #include "trapHandlers.h"
+#include "terminal.h"
 
 void kernelTrapHandler(ExceptionInfo *info) {
   TracePrintf(1, "trapHandlers: In TRAP_KERNEL interrupt handler...\n");
@@ -196,6 +197,7 @@ void memoryTrapHandler (ExceptionInfo *info) {
 }
 
 void mathTrapHandler (ExceptionInfo *info) {
+
 	TracePrintf(1, "Exception: Math\n");
 	
 	if (info -> code == TRAP_MATH_INTDIV) printf("%s\n", "Integer divide by zero");
@@ -214,22 +216,90 @@ void mathTrapHandler (ExceptionInfo *info) {
 }
 
 void ttyRecieveTrapHandler (ExceptionInfo *info) {
+  TracePrintf(1, "trapHandlers: Entering TRAP_TTY_RECEIVE interrupt handler...\n");
 
+  int term = info->code;  
+  char *receivedChars = malloc(sizeof(char) * TERMINAL_MAX_LINE);
+
+  int numReceivedChars = TtyReceive(term, receivedChars, TERMINAL_MAX_LINE);
+
+  writeBuffer(term, receivedChars, numReceivedChars, 0);
+
+  if (isNewLineInBuffer(term)) {
+    TracePrintf(3, "trapHandlers: There is a new line in buffer... wake up a reader\n");
+    wakeUpReader(term);
+  }
+
+  TracePrintf(1, "trapHandlers: Received %d chars from terminal %d.\n", numReceivedChars, term);
 }
 
 void
 ttyTransmitTrapHandler (ExceptionInfo *info) {
+  TracePrintf(1, "trapHandlers: Entering TRAP_TTY_TRANSMIT interrupt handler...\n");
 
+  int term = info->code;  
+
+  struct processControlBlock *oldWritingPCB = getWritingPCB(term);
+
+  if (oldWritingPCB == NULL) {
+    TracePrintf(3, "trapHandlers: Can't find the process writing to terminal %d during ttyTransmit.\n", term);
+  } else {
+    TracePrintf(3, "trapHandlers: Process with pid %d has been writing to terminal %d.\n", oldWritingPCB->pid, term);
+
+    // reset its status.
+    oldWritingPCB->isWriting = -1;
+    TracePrintf(3, "trapHandlers: Process with pid %d is as done writing to terminal.\n", oldWritingPCB->pid);
+  }
+  wakeUpWriter(term);
+
+  TracePrintf(1, "trapHandlers: TRAP_TTY_TRANSMIT handler finished.\n");
 }
 
 void
 ttyReadHandler(ExceptionInfo *info) {
+  int term = info->regs[1];
+  if(term < 0 || term > NUM_TERMINALS){
+    info->regs[0] = ERROR;
+    return;
+  }
+  void *buf = (void *)info->regs[2];
+  int len = info->regs[3];
 
+  int numRead = readBuffer(term, buf, len);
+
+  if (numRead >= 0) {
+    info->regs[0] = numRead;
+  } else {
+    info->regs[0] = ERROR;
+  }
 }
 
 void
 ttyWriteHandler(ExceptionInfo *info) {
+  int term = info->regs[1];
+  if(term < 0 || term > NUM_TERMINALS){
+    info->regs[0] = ERROR;
+    return;
+  }
+  void *buf = (void *)info->regs[2];
+  int len = info->regs[3];
 
+  struct scheduleNode *item = getRunningNode();
+  struct processControlBlock *currPCB = item->pcb;
+
+  // this call blocks the process if someone is already writing to terminal.
+  int numWritten = writeBuffer(term, buf, len, 1);
+
+  TtyTransmit(term, buf, numWritten);
+
+  // now that we are waiting for the io to finish, mark it as writing.
+  currPCB->isWriting = term;
+
+  if (numWritten >= 0) {
+    info->regs[0] = numWritten;
+  } else {
+    info->regs[0] = ERROR;
+  }
 }
 
 void getPidHandler(ExceptionInfo *info) {

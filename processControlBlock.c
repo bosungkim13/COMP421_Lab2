@@ -12,10 +12,10 @@ createNewProcess(int pid, int parentPid){
     pcb -> parentPid = parentPid;
     pcb -> isWaiting = 0;
     pcb -> numChildren = 0;
-    pcb -> isReading = 0;
-    pcb -> isWriting = 0;
-    pcb -> isWaitReading = 0;
-    pcb -> isWaitWriting = 0;
+    pcb -> isReading = -1;
+    pcb -> isWriting = -1;
+    pcb -> isWaitReading = -1;
+    pcb -> isWaitWriting = -1;
     
     if (pid == IDLE_PID){
         fillInitialPageTable(pcb->pageTable);

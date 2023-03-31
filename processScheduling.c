@@ -201,6 +201,49 @@ void tryFreeSwitchedAwayExitingProcess(){
 	processExitingNow = NULL;
 }
 
+struct processControlBlock* getWritingPCB(int term) {
+	TracePrintf(1, "processScheduling: looking for process writing to terminal %d\n", term);  
+	struct scheduleNode *current = getRunningNode();
+
+	while (current != NULL) {
+		TracePrintf(2, "processScheduling: current has pid of %d\n", current->pcb->pid);
+		TracePrintf(2, "processScheduling: current is writing to terminal: %d\n", current->pcb->isWriting);
+		struct processControlBlock *pcb = current->pcb;
+		if (pcb->isWriting == term) {
+			return pcb;
+		}
+		current = current->next;
+	}
+	TracePrintf(3, "processScheduling: No matching process writing to terminal %d\n", term);
+	return NULL;
+}
+
 int updateAndGetNextPid(){
   return nextPid++;
+}
+
+void wakeUpReader(int term){
+	struct scheduleNode *currNode = getRunningNode();
+	while (currNode != NULL) {
+		struct processControlBlock *pcb = currNode->pcb;
+		if (pcb->isWaitReading == term) {
+			pcb->isWaitReading = -1;
+			return;
+		}
+		currNode = currNode->next;
+	}
+	return;
+}
+
+void wakeUpWriter(int term){
+	struct scheduleNode *currNode = getRunningNode();
+	while (currNode != NULL) {
+		struct processControlBlock *pcb = currNode->pcb;
+		if (pcb->isWaitWriting == term) {
+			pcb->isWaitWriting = -1;
+			return;
+		}
+		currNode = currNode->next;
+	}
+	return;
 }
