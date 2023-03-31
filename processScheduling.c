@@ -68,7 +68,7 @@ int decreaseDelay(){
 }
 
 int isThisProcessBlocked(struct processControlBlock* pcb){
-	return pcb->delay > 0 || pcb->isWaiting || pcb->isReading || pcb->isWriting || pcb->isWaitReading || pcb->isWaitWriting;
+	return pcb->delay > 0 || pcb->isWaiting == -1 || pcb->isReading == -1 || pcb->isWriting == -1 || pcb->isWaitReading == -1 || pcb->isWaitWriting == -1;
 }
 void keepOrIdleProcess(struct processControlBlock* currentPCB){
 	if(isIdleRunning == 0){
