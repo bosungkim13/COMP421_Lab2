@@ -185,6 +185,10 @@ void freePageTable(struct pte* pageTable){
 	int vpn = 0;
 	for(; vpn < VMEM_0_LIMIT/PAGESIZE; vpn++){
 		if(pageTable[vpn].valid == 1){
+			if(pageTable[vpn].pfn >= KERNEL_STACK_BASE/PAGESIZE){
+				printf("FreePageTable - Attempted to free pfn %d, which belongs to idle's kernel stack! Halting...\n", pageTable[vpn].pfn);
+				Halt();
+			}
 			TracePrintf(1, "FreePageTable - Freeing physical page %d found in vpn %d\n", pageTable[vpn].pfn, vpn);
 			freePhysicalPage(pageTable[vpn].pfn);
 		}
