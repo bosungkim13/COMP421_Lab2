@@ -82,15 +82,17 @@ void waitTrapHandler(ExceptionInfo *info){
 }
 
 void execTrapHandler(ExceptionInfo *info){
-  /*char *filename = (char *)info->regs[1];
-  char **argvec = (char **)info->regs[2];
-
-  struct scheduleNode *node = getHead();
-
-  int loadReturn = LoadProgram(filename, argvec, info, node->pcb);
-  if (loadReturn == -1){
-    info->regs[0] = ERROR;
-  }*/
+	char *filename = (char *)info->regs[1];
+	char **argvec = (char **)info->regs[2];
+	
+	struct scheduleNode *node = getHead();
+	
+	int loadReturn = LoadProgram(filename, argvec, info, node->pcb);
+	if (loadReturn == -1){
+		info->regs[0] = ERROR;
+	} else if (loadReturn == -2){
+		exitHandler(info, 1);
+	}
 }
 
 void forkTrapHandler(ExceptionInfo *info){
