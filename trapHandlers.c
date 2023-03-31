@@ -137,21 +137,21 @@ void clockTrapHandler (ExceptionInfo *info) {
 void illegalTrapHandler (ExceptionInfo *info) {
 	TracePrintf(1, "trapHandlers: Illegal trap handler \n");
 	
-	if (info -> code == TRAP_ILLEGAL_ILLOPC) printf("Illegal Opcode\n");
-	else if (info -> code == TRAP_ILLEGAL_ILLOPN) printf("Illegal Operand\n");
-	else if (info -> code == TRAP_ILLEGAL_ILLADR) printf("Illegal address mode\n");
-	else if (info -> code == TRAP_ILLEGAL_ILLTRP) printf("Illegal software trap\n");
-	else if (info -> code == TRAP_ILLEGAL_PRVOPC) printf("Privileged opcode\n");
-	else if (info -> code == TRAP_ILLEGAL_PRVREG) printf("Privileged register\n");
-	else if (info -> code == TRAP_ILLEGAL_COPROC) printf("Coprocessor error\n");
-	else if (info -> code == TRAP_ILLEGAL_BADSTK) printf("Bad stack\n");
-	else if (info -> code == TRAP_ILLEGAL_KERNELI) printf("Linux kernel sent SIGILL\n");
-	else if (info -> code == TRAP_ILLEGAL_USERIB) printf("Received SIGILL or SIGBUS from user\n");
-	else if (info -> code == TRAP_ILLEGAL_ADRALN) printf("Invalid address alignment\n");
-	else if (info -> code == TRAP_ILLEGAL_ADRERR) printf("Non-existent physical address\n");
-	else if (info -> code == TRAP_ILLEGAL_OBJERR) printf("Object-specific HW error\n");
-	else if (info -> code == TRAP_ILLEGAL_KERNELB) printf("Linux kernel sent SIGBUS\n");
-	else printf("Some other illegal trap occured\n");
+	if (info -> code == TRAP_ILLEGAL_ILLOPC) printf("Process %d terminating - Illegal Opcode\n", getCurrentPid());
+	else if (info -> code == TRAP_ILLEGAL_ILLOPN) printf("Process %d terminating - Illegal Operand\n", getCurrentPid());
+	else if (info -> code == TRAP_ILLEGAL_ILLADR) printf("Process %d terminating - Illegal address mode\n", getCurrentPid());
+	else if (info -> code == TRAP_ILLEGAL_ILLTRP) printf("Process %d terminating - Illegal software trap\n", getCurrentPid());
+	else if (info -> code == TRAP_ILLEGAL_PRVOPC) printf("Process %d terminating - Privileged opcode\n", getCurrentPid());
+	else if (info -> code == TRAP_ILLEGAL_PRVREG) printf("Process %d terminating - Privileged register\n", getCurrentPid());
+	else if (info -> code == TRAP_ILLEGAL_COPROC) printf("Process %d terminating - Coprocessor error\n", getCurrentPid());
+	else if (info -> code == TRAP_ILLEGAL_BADSTK) printf("Process %d terminating - Bad stack\n", getCurrentPid());
+	else if (info -> code == TRAP_ILLEGAL_KERNELI) printf("Process %d terminating - Linux kernel sent SIGILL\n", getCurrentPid());
+	else if (info -> code == TRAP_ILLEGAL_USERIB) printf("Process %d terminating - Received SIGILL or SIGBUS from user\n", getCurrentPid());
+	else if (info -> code == TRAP_ILLEGAL_ADRALN) printf("Process %d terminating - Invalid address alignment\n", getCurrentPid());
+	else if (info -> code == TRAP_ILLEGAL_ADRERR) printf("Process %d terminating - Non-existent physical address\n", getCurrentPid());
+	else if (info -> code == TRAP_ILLEGAL_OBJERR) printf("Process %d terminating - Object-specific HW error\n", getCurrentPid());
+	else if (info -> code == TRAP_ILLEGAL_KERNELB) printf("Process %d terminating - Linux kernel sent SIGBUS\n", getCurrentPid());
+	else printf("Process %d terminating - Some other illegal trap occured\n", getCurrentPid());
 	
 	exitHandler(info, 1);
 }
