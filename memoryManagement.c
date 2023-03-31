@@ -48,11 +48,11 @@ void markPagesInRange(void *start, void *end){
     for (i = begin; i < limit; i++){
         isPhysicalPageOccupied[i] = 1;
     }
-    TracePrintf(1, "memoryManagement - markPagesInRange - Marking pages [%d, %d)\n", begin, limit);
+    /*TracePrintf(1, "memoryManagement - markPagesInRange - Marking pages [%d, %d)\n", begin, limit);
     TracePrintf(1, "memoryManagement - markPagesInRange - Current page marking:\n");
     for(i = 0; i < numPhysicalPages; i++){
     	TracePrintf(1, "Pfn %d has marking %d\n", i, isPhysicalPageOccupied[i]);
-    }
+    }*/
 }
 
 // moves the kernel break and marks the physical pages as taken in the free physical page 

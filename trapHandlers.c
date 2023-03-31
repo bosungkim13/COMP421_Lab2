@@ -27,7 +27,7 @@ void kernelTrapHandler(ExceptionInfo *info) {
       exitHandler(info, 0);
       break;
     case YALNIX_WAIT:
-      TracePrintf(1, "trapHandlers: Wait requested.\n");
+      TracePrintf(1, "trapHandlers: Wait requested by process %d.\n", currentPid);
       waitTrapHandler(info);
       break;
     case YALNIX_GETPID:
@@ -35,7 +35,7 @@ void kernelTrapHandler(ExceptionInfo *info) {
       getPidHandler(info);
       break;
     case YALNIX_BRK:
-      TracePrintf(1, "trapHandlers: Brk requested.\n");
+      TracePrintf(1, "trapHandlers: Brk requested by process %d.\n", currentPid);
       brkHandler(info);
       break;
     case YALNIX_DELAY:
@@ -43,38 +43,42 @@ void kernelTrapHandler(ExceptionInfo *info) {
       delayHandler(info);
       break;
     case YALNIX_TTY_READ:
-      TracePrintf(1, "trapHandlers: Tty Read requested.\n");
+      TracePrintf(1, "trapHandlers: Tty Read requested by process %d.\n", currentPid);
       ttyReadHandler(info);
       break;
     case YALNIX_TTY_WRITE:
-      TracePrintf(1, "trapHandlers: Tty Write requested.\n");
+      TracePrintf(1, "trapHandlers: Tty Write requested by process %d.\n", currentPid);
       ttyWriteHandler(info);
       break;
   }
-
 }
 
 void waitTrapHandler(ExceptionInfo *info){
-    int *status = (int *)info->regs[1];
-
-    struct scheduleNode *item = getRunningNode();
-    struct processControlBlock *parentPCB = item->pcb;
-
-    struct exitNode *exit = popChildExitNode(parentPCB);
-    if(exit == NULL){
-      if(parentPCB->numChildren == 0){
-        info->regs[0] = (long)NULL;
-        return;
-      }
-      parentPCB->isWaiting = 1;
-
-      // TODO reset the wait time then schedule the next process
-
-      exit = popChildExitNode(parentPCB);
-    }
-
-    *status = exit->exitType;
-    info->regs[0] = exit->pid;
+	int* statusPtr = (int*)info->regs[1];
+	struct processControlBlock* parentPCB = getRunningNode()->pcb;
+	if(parentPCB->numChildren == 0){
+		if(parentPCB->exitQ == NULL){
+			// Never had children
+			info->regs[0] = ERROR;
+			return;
+		}else{
+			// Had children, they've all exited
+		}
+	}else{
+		TracePrintf(1, "Parent process %d has %d children\n", parentPCB->pid, parentPCB->numChildren);
+		if(parentPCB->exitQ == NULL){
+			TracePrintf(1, "Parent process %d's children are all still running. Waiting...\n", parentPCB->pid);
+			parentPCB->isWaiting = 1;
+			scheduleProcess(0);
+		}
+		// Either we already had an exited child
+		// or one of the children running exited and switched back to here
+	}
+	struct exitNode* exit = popChildExitNode(parentPCB);
+	TracePrintf(1, "Parent process %d has an exited child: pid %d with status %d\n", parentPCB->pid, exit->pid, exit->exitType);
+	*statusPtr = exit->exitType;
+	info->regs[0] = exit->pid;
+	free(exit);
 }
 
 void execTrapHandler(ExceptionInfo *info){
@@ -107,13 +111,14 @@ void forkTrapHandler(ExceptionInfo *info){
 		return;
 	}
 	
+	parentPCB->numChildren++;
+	TracePrintf(1, "Trap Handlers - Fork: Parent pcb %d now has %d running children\n", parentPCB->pid, parentPCB->pid);
 	cloneAndSwitchToProcess(parentPCB, childPCB);
 	// Returns as the child first, but we don't need to use that info
 	if(getCurrentPid() == childPid){
 		info->regs[0] = 0;
 	} else {
 		info->regs[0] = childPid;
-		parentPCB->numChildren++;
 	}
 }
 
@@ -127,67 +132,25 @@ void clockTrapHandler (ExceptionInfo *info) {
 }
 
 void illegalTrapHandler (ExceptionInfo *info) {
-  TracePrintf(1, "trapHandlers: Illegal trap handler \n");
-  if (info -> code == TRAP_ILLEGAL_ILLOPC) {
-      TracePrintf(1, "Illegal Opcode \n");
-  }
-
-  else if (info -> code == TRAP_ILLEGAL_ILLOPN) {
-      TracePrintf(1, "Illegal Operand \n");
-  }
-
-  else if (info -> code == TRAP_ILLEGAL_ILLADR) {
-      TracePrintf(1, "Illegal address mode \n");
-  }
-
-  else if (info -> code == TRAP_ILLEGAL_ILLTRP) {
-      TracePrintf(1, "Illegal software trap \n");
-  }
-
-  else if (info -> code == TRAP_ILLEGAL_PRVOPC) {
-      TracePrintf(1, "Privileged opcode \n");
-  }
-
-  else if (info -> code == TRAP_ILLEGAL_PRVREG) {
-      TracePrintf(1, "Privileged register \n");
-  }
-
-  else if (info -> code == TRAP_ILLEGAL_COPROC) {
-      TracePrintf(1, "Coprocessor error \n");
-  }
-
-  else if (info -> code == TRAP_ILLEGAL_BADSTK) {
-      TracePrintf(1, "Bad stack \n");
-  }
-
-  else if (info -> code == TRAP_ILLEGAL_KERNELI) {
-      TracePrintf(1, "Linux kernel sent SIGILL \n");
-  }
-
-  else if (info -> code == TRAP_ILLEGAL_USERIB) {
-      TracePrintf(1, "Received SIGILL or SIGBUS from user \n");
-  }
-
-  else if (info -> code == TRAP_ILLEGAL_ADRALN) {
-      TracePrintf(1, "Invalid address alignment \n");
-  }
-
-  else if (info -> code == TRAP_ILLEGAL_ADRERR) {
-      TracePrintf(1, "Non-existent physical address \n");
-  }
-
-  else if (info -> code == TRAP_ILLEGAL_OBJERR) {
-      TracePrintf(1, "Object-specific HW error \n");
-  }
-
-  else if (info -> code == TRAP_ILLEGAL_KERNELB) {
-      TracePrintf(1, "Linux kernel sent SIGBUS \n");
-  }
-  else { 
-    return; 
-  }
-  exitHandler(info, 1);
-  return;
+	TracePrintf(1, "trapHandlers: Illegal trap handler \n");
+	
+	if (info -> code == TRAP_ILLEGAL_ILLOPC) printf("Illegal Opcode\n");
+	else if (info -> code == TRAP_ILLEGAL_ILLOPN) printf("Illegal Operand\n");
+	else if (info -> code == TRAP_ILLEGAL_ILLADR) printf("Illegal address mode\n");
+	else if (info -> code == TRAP_ILLEGAL_ILLTRP) printf("Illegal software trap\n");
+	else if (info -> code == TRAP_ILLEGAL_PRVOPC) printf("Privileged opcode\n");
+	else if (info -> code == TRAP_ILLEGAL_PRVREG) printf("Privileged register\n");
+	else if (info -> code == TRAP_ILLEGAL_COPROC) printf("Coprocessor error\n");
+	else if (info -> code == TRAP_ILLEGAL_BADSTK) printf("Bad stack\n");
+	else if (info -> code == TRAP_ILLEGAL_KERNELI) printf("Linux kernel sent SIGILL\n");
+	else if (info -> code == TRAP_ILLEGAL_USERIB) printf("Received SIGILL or SIGBUS from user\n");
+	else if (info -> code == TRAP_ILLEGAL_ADRALN) printf("Invalid address alignment\n");
+	else if (info -> code == TRAP_ILLEGAL_ADRERR) printf("Non-existent physical address\n");
+	else if (info -> code == TRAP_ILLEGAL_OBJERR) printf("Object-specific HW error\n");
+	else if (info -> code == TRAP_ILLEGAL_KERNELB) printf("Linux kernel sent SIGBUS\n");
+	else printf("Some other illegal trap occured\n");
+	
+	exitHandler(info, 1);
 }
 
 void memoryTrapHandler (ExceptionInfo *info) {
@@ -230,68 +193,21 @@ void memoryTrapHandler (ExceptionInfo *info) {
 }
 
 void mathTrapHandler (ExceptionInfo *info) {
-  TracePrintf(1, "Exception: Math\n");
-  if (info -> code == TRAP_MATH_INTDIV) {
-      printf("%s\n", "Integer divide by zero");
-      exitHandler(info, 1);
-      return;
-  }
-
-  if (info -> code == TRAP_MATH_INTOVF) {
-      printf("%s\n", "Integer overflow");
-      exitHandler(info, 1);
-      return;
-  }
-
-  if (info -> code == TRAP_MATH_FLTDIV) {
-      printf("%s\n", "Floating divide by zero");
-      exitHandler(info, 1);
-      return;
-  }
-
-  if (info -> code == TRAP_MATH_FLTOVF) {
-      printf("%s\n", "Floating overflow");
-      exitHandler(info, 1);
-      return;
-  }
-
-  if (info -> code == TRAP_MATH_FLTUND) {
-      printf("%s\n", "Floating underflow");
-      exitHandler(info, 1);
-      return;
-  }
-
-  if (info -> code == TRAP_MATH_FLTRES) {
-      printf("%s\n", "Floating inexact result");
-      exitHandler(info, 1);
-      return;
-  }
-
-  if (info -> code == TRAP_MATH_FLTINV) {
-      printf("%s\n", "Invalid floating operation");
-      exitHandler(info, 1);
-      return;
-  }
-
-  if (info -> code == TRAP_MATH_FLTSUB) {
-      printf("%s\n", "FP subscript out of range");
-      exitHandler(info, 1);
-      return;
-  }
-
-  if (info -> code == TRAP_MATH_KERNEL) {
-      printf("%s\n", "Linux kernel sent SIGFPE");
-      exitHandler(info, 1);
-      return;
-  }
-
-  if (info -> code == TRAP_MATH_USER) {
-      printf("%s\n", "Received SIGFPE from user");
-      exitHandler(info, 1);
-      return;
-  }
-
-  else { return; }
+	TracePrintf(1, "Exception: Math\n");
+	
+	if (info -> code == TRAP_MATH_INTDIV) printf("%s\n", "Integer divide by zero");
+	else if (info -> code == TRAP_MATH_INTOVF) printf("%s\n", "Integer overflow");
+	else if (info -> code == TRAP_MATH_FLTDIV) printf("%s\n", "Floating divide by zero");
+	else if (info -> code == TRAP_MATH_FLTOVF) printf("%s\n", "Floating overflow");
+	else if (info -> code == TRAP_MATH_FLTUND) printf("%s\n", "Floating underflow");
+	else if (info -> code == TRAP_MATH_FLTRES) printf("%s\n", "Floating inexact result");
+	else if (info -> code == TRAP_MATH_FLTINV) printf("%s\n", "Invalid floating operation");
+	else if (info -> code == TRAP_MATH_FLTSUB) printf("%s\n", "FP subscript out of range");
+	else if (info -> code == TRAP_MATH_KERNEL) printf("%s\n", "Linux kernel sent SIGFPE");
+	else if (info -> code == TRAP_MATH_USER) printf("%s\n", "Received SIGFPE from user");
+	else printf("%s\n", "Some other math error occured");
+	
+	exitHandler(info, 1);
 }
 
 void ttyRecieveTrapHandler (ExceptionInfo *info) {

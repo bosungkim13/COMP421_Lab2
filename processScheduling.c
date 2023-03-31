@@ -146,12 +146,12 @@ void scheduleProcess(int isExit){
 	} else{
 		struct scheduleNode* exitingNode = head;
 		head = head->next;
-		// Switch to idle, then switch away as normal
+		// Switch to idle, then switch away next clock tick
 		// This prevents special case handling for switching away from the exiting process
 		// which isn't in the list
 		isIdleRunning = 1;
+		lastClockTickPID = 0;
 		switchToExistingProcess(exitingNode->pcb, idlePCB);
-		scheduleProcess(0);
 	}
 }
 
@@ -181,14 +181,4 @@ void removeExitingProcess(){
 int updateAndGetNextPid(){
   return nextPid++;
 }
-/*
-void removeHead(){
-  TracePrintf(2, "processScheduling: Begin to remove head of scheduled processes.\n");
-  struct scheduleNode *currHead = getHead();
-  head = currHead->next;
-  freePageTable(currHead->pcb->pageTable);
-  free(currHead->pcb);
-  free(currHead);
-  TracePrintf(2, "processScheduling: End removal to head of scheduled processes.\n");
-}
-*/
+

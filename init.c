@@ -31,39 +31,35 @@ int testFork(){
 	return childPid == 0;
 }
 
-void testExit(){
-	printf("Init id %d: Testing exit\n", GetPid());
-	Exit(0);
+// Returns 1 if it got a child
+int testWait(){
+	printf("Init id %d: Waiting for child process...\n", GetPid());
+	int childStatus = 0;
+	int childPid = Wait(&childStatus);
+	printf("Init id %d: Wait returned, with child process id %d and status %d\n", GetPid(), childPid, childStatus);
+	return childPid != ERROR;
+}
+
+void testExit(int status){
+	printf("Init id %d: Testing exit with status %d\n", GetPid(), status);
+	Exit(status);
 }
 
 int main() {
 	printf("Init id %d: Initialized and running.\n", GetPid());
 
 	// Test invalid delay
-	/*testDelay(-10);
+	//testDelay(-10);
 
+	// All calls test
 	int i = 0;
-	for(; i < 4; i++){
+	for(; i < 5; i++){
 		printf("Init id %d: Main loop iteration %d\n", GetPid(), i);
-		if(testFork()){
-			// Child
-			//testDelay(12);
-			delayCountdownLoop(i+4, 8-i);
-			break;
-		}else{
-			// Parent, or if fork failed
-			//testDelay(2);
-			delayCountdownLoop(i+5, 5);
-		}
-	}*/
-	testFork();
-	testFork();
-	testFork();
-	// There should be 8 processes
-	testDelay(12-GetPid());
-	
-	// Test exit
-	testExit();
+		testFork();
+		testDelay(i);//delayCountdownLoop(i, 8-i);
+	}
+	while(testWait());
+	testExit(GetPid());
 	
 	// TODO The true contents of init, once we're done testing.
 	//while(1) Pause();

@@ -12,7 +12,7 @@ struct processControlBlock
   void *brk;
   void *userStackLimit;
   int isWaiting; // 1 if blocked due to a Wait call. 0 otherwise.
-  int numChildren;
+  int numChildren; // The number alive and running now. Children that have exited but not been Wait() for are not counted here
   int parentPid;
   int isReading;
   int isWaitReading;

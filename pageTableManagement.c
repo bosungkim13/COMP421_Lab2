@@ -93,7 +93,7 @@ createPageTable(){
             }
         }
     }
-    TracePrintf(2, "pageTableManagement: No space in current page table records... creating new page table record");
+    TracePrintf(2, "pageTableManagement: No space in current page table records... creating new page table record\n");
     // creating new page table record entry, then giving the top half as the new page table
 
     struct pageTableRecord *newPTRecord = malloc(sizeof(struct pageTableRecord));
