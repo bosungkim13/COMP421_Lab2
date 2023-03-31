@@ -99,19 +99,20 @@ void forkTrapHandler(ExceptionInfo *info){
 	struct scheduleNode* currentNode = getRunningNode();
 	struct processControlBlock* parentPCB = currentNode->pcb;
 	
-	int childPid = updateAndGetNextPid();
-	int parentPid = getCurrentPid();
-	struct processControlBlock *childPCB = createNewProcess(childPid, parentPid);
 	
 	int physicalPagesNeeded = numPagesInUse(parentPCB->pageTable) + KERNEL_STACK_PAGES;
 	int physicalPagesAvailable = freePhysicalPageCount();
 	if (physicalPagesNeeded > physicalPagesAvailable){
 		TracePrintf(1, "Trap Handlers - Fork: In fork handler but not enough free physical pages (%d needed, %d available) for copy\n", physicalPagesNeeded, physicalPagesAvailable);
-		freePageTable(childPCB->pageTable);
-		free(childPCB);
+		//freePageTable(childPCB->pageTable);
+		//free(childPCB);
 		info->regs[0] = ERROR;
 		return;
 	}
+
+  int childPid = updateAndGetNextPid();
+	int parentPid = getCurrentPid();
+	struct processControlBlock *childPCB = createNewProcess(childPid, parentPid);
 	
 	parentPCB->numChildren++;
 	TracePrintf(1, "Trap Handlers - Fork: Parent pcb %d now has %d running children\n", parentPCB->pid, parentPCB->numChildren);

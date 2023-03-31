@@ -27,6 +27,7 @@ SavedContext* copyProcessFunction(SavedContext *ctxp, void* p1, void* p2){
 }
 void cloneAndSwitchToProcess(struct processControlBlock* currentPCB, struct processControlBlock* targetPCB){
 	ContextSwitch(copyProcessFunction, &currentPCB->savedContext, (void*)currentPCB, (void*)targetPCB);
+	tryFreeSwitchedAwayExitingProcess();
 }
 
 // Assumes REG_PTR0 points to the physical address that is the base of virtPTFrom

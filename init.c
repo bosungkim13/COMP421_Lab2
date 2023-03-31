@@ -64,14 +64,27 @@ int main() {
 	int i = 0;
 	for(; i < 100; i++){
 		int j = 0;
-		for(; j < 4; j++){
+		for(; j < 16; j++){
 			if(testFork()){
 				testDelay(2);
-				testExit(GetPid());
+				//testExit(GetPid());
+			}
+			if(testFork()){
+				testDelay(2);
+				//testExit(GetPid());
+			}
+			if(testFork()){
+				testDelay(2);
+				//testExit(GetPid());
+			}
+			if(testFork()){
+				testDelay(2);
+				//testExit(GetPid());
 			}
 		}
 		while(testWait());
 	}
+
 	
 	// TODO The true contents of init, once we're done testing.
 	//while(1) Pause();
