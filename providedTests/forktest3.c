@@ -14,6 +14,7 @@ recurse(char *who, int i)
     for (j = 0; j < 1024; j++) 
 	waste[j] = 'a';
 
+	mem[1] = waste[1];
     Delay(1);
 
     printf("%s %d\n", who, i);
