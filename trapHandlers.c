@@ -134,6 +134,7 @@ void clockTrapHandler (ExceptionInfo *info) {
 		TracePrintf(1, "trapHandlers: time to switch... scheduling processes now\n");
 		scheduleProcess(0);
 	}
+	TracePrintf(1, "ClockTrapHandler: Exiting as process %d\n", getCurrentPid());
 }
 
 void illegalTrapHandler (ExceptionInfo *info) {
@@ -293,6 +294,7 @@ void delayHandler(ExceptionInfo *info) {
 		TracePrintf(1, "trapHandlers: In delayHandler... initiating a context switch.\n");
 		scheduleProcess(0);
 	}
+	TracePrintf(1, "DelayHandler: Exiting as process %d\n", getCurrentPid());
 	return;
 }
 
@@ -306,7 +308,7 @@ void exitHandler(ExceptionInfo *info, int calledDueToProgramError) {
 	int parentPid = getRunningNode()->pcb->parentPid;
 	int exitType = calledDueToProgramError ? ERROR : (int)(info->regs[1]);
 	
-	TracePrintf(1, "trapHandlers: Process with pid %d attempting to exit\n", currentPid);
+	TracePrintf(1, "trapHandlers: Process with pid %d attempting to exit, has parent %d\n", currentPid, parentPid);
 	
 	// Check that pcb is not an orphan process
 	if (parentPid != ORPHAN_PARENT_PID) {

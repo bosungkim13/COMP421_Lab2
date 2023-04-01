@@ -173,11 +173,14 @@ int growUserStack(ExceptionInfo *info, struct scheduleNode *head){
     	if(physicalPagesNeeded > freePhysicalPageCount()){
     		return 0;
     	}
-        TracePrintf(2, "memoryManagement: Entering grow_user_stack with process %d, for addr %p and need %d pages \n", head->pcb->pid, addr, physicalPagesNeeded);
+        TracePrintf(2, "memoryManagement: Entering grow_user_stack with process %d with current stack at %p, for target addr %p and need %d pages \n", head->pcb->pid, head->pcb->userStackLimit, addr, physicalPagesNeeded);
         int i;
         for(i = 0; i < physicalPagesNeeded; i++) {
+        	TracePrintf(2, "memoryManagement: Growing user stack down to include vpn %d\n", currentVPN - i - 1);
             head->pcb->pageTable[currentVPN - i - 1].valid = 1;
             head->pcb->pageTable[currentVPN - i - 1].pfn = getFreePhysicalPage();
+            head->pcb->pageTable[currentVPN - i - 1].uprot = PROT_READ | PROT_WRITE;
+            WriteRegister(REG_TLB_FLUSH, (RCS421RegVal)(currentVPN - i - 1));
         }
         head->pcb->userStackLimit = (void *)DOWN_TO_PAGE(addr);
         TracePrintf(2, "memoryManagement: Grew user stack limiit to %p \n", head->pcb->userStackLimit);
@@ -190,6 +193,7 @@ int growUserStack(ExceptionInfo *info, struct scheduleNode *head){
 
 void brkHandler(ExceptionInfo *info){ 
 	void *addr = (void *)info->regs[1];
+	TracePrintf(2, "BrkHandler - Break called for process %d with address %p, existing brk is %p\n", getRunningNode()->pcb->pid, addr, getRunningNode()->pcb->brk);
 	// invalid addr
 	if(UP_TO_PAGE(addr) <= MEM_INVALID_SIZE){
 		info->regs[0] = ERROR;
@@ -231,6 +235,7 @@ void brkHandler(ExceptionInfo *info){
 		for(; i < numPagesFree; i++){
 			userPT[(long)UP_TO_PAGE(brk)/PAGESIZE - i - 1].valid = 0;
 			freePhysicalPage(userPT[(long)UP_TO_PAGE(brk)/PAGESIZE - i - 1].pfn);
+			WriteRegister(REG_TLB_FLUSH, (RCS421RegVal)((long)UP_TO_PAGE(brk)/PAGESIZE - i - 1));
 		}
 	}
 

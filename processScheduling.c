@@ -100,6 +100,7 @@ void scheduleProcess(int isExit){
 			// unblocked and switched to first.
 			isIdleRunning = 0;
 			switchToExistingProcess(idlePCB, head->pcb);
+			TracePrintf(2, "ScheduleProcess - Returning from process scheduling (switchToHead case) as %d\n", getCurrentPid());
 			return;
 		}
 		if (head->next == NULL) {
@@ -107,6 +108,7 @@ void scheduleProcess(int isExit){
 			// Keep the current process if it's not blocked, switch to idle if it is.
 			TracePrintf(1, "ScheduleProcess - No other processes, switching to idle if current is blocked\n");
 			keepOrIdleProcess(head->pcb);
+			TracePrintf(2, "ScheduleProcess - Returning from process scheduling (head->next == NULL case) as %d\n", getCurrentPid());
 			return;
 		}
 		
@@ -176,6 +178,7 @@ void removeExitingProcess(){
 }
 void tryFreeSwitchedAwayExitingProcess(){
 	if(processExitingNow == NULL) return;
+	TracePrintf(1, "ProcessScheduling: Starting tryFreeSwitchedAwayExitingProcess\n");
 	
 	int id = processExitingNow->pcb->pid;
 	TracePrintf(1, "ProcessScheduling - Remove Exiting Process: After context switch away from exiting process %d\n", id);

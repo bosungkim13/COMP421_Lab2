@@ -16,6 +16,7 @@ createNewProcess(int pid, int parentPid, struct processControlBlock* parentPCB){
     pcb -> isWriting = -1;
     pcb -> isWaitReading = -1;
     pcb -> isWaitWriting = -1;
+    pcb->exitQ = NULL;
     
     if (pid == IDLE_PID){
         fillInitialPageTable(pcb->pageTable);

@@ -121,6 +121,6 @@ void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, c
         }
         TracePrintf(2, "kernelStart: Loaded init program\n");
     }
-    initTerminalBuffers();
+    //initTerminalBuffers();
     // remember to add the setting break stuff to load program and do an IO initialization for later terminals n stuff
 }

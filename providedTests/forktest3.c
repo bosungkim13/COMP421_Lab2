@@ -5,17 +5,15 @@
 void
 recurse(char *who, int i)
 {
-    char waste[1024];	/* use up stack space in the recursion */
-    char *mem = (char *)malloc(2048); /* use up heap space */
-    int j;
+    char waste[10240];	/* use up stack space in the recursion */
+    //char *mem = (char *)malloc(2048); /* use up heap space */
+    Delay(1);
+    //printf("mem %p\n", mem);
 
-    printf("mem %p\n", mem);
-
-    for (j = 0; j < 1024; j++) 
+    /*for (j = 0; j < 1024; j++) 
 	waste[j] = 'a';
 
-	mem[1] = waste[1];
-    Delay(1);
+	waste[0] = waste[1];*/
 
     printf("%s %d\n", who, i);
     if (i == 0)
@@ -30,22 +28,28 @@ recurse(char *who, int i)
 int
 main(int argc, char **argv)
 {
-    int pid;
+    //int pid;
 
     setbuf(stdout, NULL);
 
     printf("BEFORE\n");
 
-    if ((pid = Fork()) == 0)
+    /*if ((pid = Fork()) == 0)
     {
 	printf("CHILD\n");
 	recurse("child", 33);
     }
     else
-    {
-	printf("PARENT: child pid = %d\n", pid);
-	recurse("parent", 33);
-    }
+    {*/
+	//printf("PARENT: child pid = %d\n", pid);
+	printf("Before recursion\n");
+	recurse("parent", 90);//33);
+	printf("After recursion\n");
+    //}
 
+    Delay(0);
+    printf("Finished first delay, starting second ...\n");
+    Delay(1);
+    printf("Finished second delay, starting exit ...\n");
     Exit(0);
 }

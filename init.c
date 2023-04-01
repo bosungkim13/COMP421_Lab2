@@ -46,7 +46,7 @@ void testExit(int status){
 }
 
 int main() {
-	printf("Init id %d: Initialized and running.\n", GetPid());
+	//printf("Init id %d: Initialized and running.\n", GetPid());
 
 	// Test invalid delay
 	//testDelay(-10);
@@ -61,33 +61,31 @@ int main() {
 	while(testWait());
 	testExit(GetPid());*/
 	
-	int i = 0;
+	/*int i = 0;
 	for(; i < 100; i++){
-		int j = 0;
-		for(; j < 16; j++){
-			if(testFork()){
-				testDelay(2);
-				//testExit(GetPid());
-			}
-			if(testFork()){
-				testDelay(2);
-				//testExit(GetPid());
-			}
-			if(testFork()){
-				testDelay(2);
-				//testExit(GetPid());
-			}
-			if(testFork()){
-				testDelay(2);
-				//testExit(GetPid());
-			}
-		}
+		char* testPointer1 = malloc(10000);
+		printf("Init id %d: Malloced test pointer one at %p\n", GetPid(), testPointer1);
+		testFork();
+		testFork();
+		//testFork();
+		// 4 processes
+		char* testPointer2 = malloc(10000);
+		printf("Init id %d: Malloced test pointer two at %p\n", GetPid(), testPointer2);
+		
+		free(testPointer1);
+		printf("Init id %d: Freed test pointer one at %p\n", GetPid(), testPointer1);
+		free(testPointer2);
+		printf("Init id %d: Freed test pointer two at %p\n", GetPid(), testPointer2);
+		
+		if(malloc(10000000) == NULL) printf("Init id %d: Tried mallocing 10M, returned null as expected.\n", GetPid());
+		
 		while(testWait());
-	}
+		if(GetPid() != 1) testExit(GetPid());
+	}*/
 
 	
 	// TODO The true contents of init, once we're done testing.
-	//while(1) Pause();
+	while(1) Pause();
 	
 	return 0;
 }
