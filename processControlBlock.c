@@ -4,7 +4,7 @@
 
 
 struct processControlBlock*
-createNewProcess(int pid, int parentPid){
+createNewProcess(int pid, int parentPid, struct processControlBlock* parentPCB){
     struct processControlBlock *pcb = malloc(sizeof(struct processControlBlock));
     pcb -> pid = pid;
     pcb -> pageTable = createPageTable();
@@ -22,6 +22,8 @@ createNewProcess(int pid, int parentPid){
     }else{
     	addToSchedule(pcb);
         fillPageTable(pcb->pageTable);
+        pcb->brk = parentPCB->brk;
+        pcb->userStackLimit = parentPCB->userStackLimit;
     }
     
     return pcb;

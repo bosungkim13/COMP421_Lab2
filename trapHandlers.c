@@ -114,7 +114,7 @@ void forkTrapHandler(ExceptionInfo *info){
 
 	int childPid = updateAndGetNextPid();
 	int parentPid = getCurrentPid();
-	struct processControlBlock *childPCB = createNewProcess(childPid, parentPid);
+	struct processControlBlock *childPCB = createNewProcess(childPid, parentPid, parentPCB);
 	
 	parentPCB->numChildren++;
 	TracePrintf(1, "Trap Handlers - Fork: Parent pcb %d now has %d running children\n", parentPCB->pid, parentPCB->numChildren);

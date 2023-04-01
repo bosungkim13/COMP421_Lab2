@@ -71,7 +71,7 @@ void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, c
     TracePrintf(2, "kernelStart: Initialization of the first page table record complete\n");
 
     // Region 0 page table initialization and creating the idle process
-    struct processControlBlock *idlePCB = createNewProcess(IDLE_PID, ORPHAN_PARENT_PID);
+    struct processControlBlock *idlePCB = createNewProcess(IDLE_PID, ORPHAN_PARENT_PID, NULL);
     setIdlePCB(idlePCB);
     // set PTR0
     WriteRegister(REG_PTR0, (RCS421RegVal) idlePCB->pageTable);
@@ -83,7 +83,7 @@ void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, c
     setupPageSwapSpace();
 
     // create the init process
-    struct processControlBlock* initPCB = createNewProcess(INIT_PID, ORPHAN_PARENT_PID);
+    struct processControlBlock* initPCB = createNewProcess(INIT_PID, ORPHAN_PARENT_PID, idlePCB);
 
     // TODO: need to implement LoadProgram and ContextSwitch
     // load the idle process

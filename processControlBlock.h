@@ -30,6 +30,6 @@ struct exitNode
   struct exitNode *next;
 };
 
-struct processControlBlock* createNewProcess(int pid, int parentPid);
+struct processControlBlock* createNewProcess(int pid, int parentPid, struct processControlBlock* parentPCB);
 struct processControlBlock* getPCB(int pid);
 void appendChildExitNode(struct processControlBlock* parentPCB, int pid, int exitType);
