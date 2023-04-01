@@ -60,8 +60,8 @@ int main() {
 	}
 	while(testWait());
 	testExit(GetPid());*/
-	
-	/*int i = 0;
+	/*
+	int i = 0;
 	for(; i < 100; i++){
 		char* testPointer1 = malloc(10000);
 		printf("Init id %d: Malloced test pointer one at %p\n", GetPid(), testPointer1);
@@ -82,7 +82,6 @@ int main() {
 		while(testWait());
 		if(GetPid() != 1) testExit(GetPid());
 	}*/
-
 	
 	// TODO The true contents of init, once we're done testing.
 	while(1) Pause();

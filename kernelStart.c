@@ -81,6 +81,7 @@ void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, c
     initVM();
     TracePrintf(2, "kernelStart: Virtual memory now enabled\n");
     setupPageSwapSpace();
+    initTerminalBuffers();
 
     // create the init process
     struct processControlBlock* initPCB = createNewProcess(INIT_PID, ORPHAN_PARENT_PID, idlePCB);
@@ -121,6 +122,4 @@ void KernelStart(ExceptionInfo *frame, unsigned int pmem_size, void *orig_brk, c
         }
         TracePrintf(2, "kernelStart: Loaded init program\n");
     }
-    //initTerminalBuffers();
-    // remember to add the setting break stuff to load program and do an IO initialization for later terminals n stuff
 }

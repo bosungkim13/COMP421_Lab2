@@ -183,7 +183,7 @@ int growUserStack(ExceptionInfo *info, struct scheduleNode *head){
             WriteRegister(REG_TLB_FLUSH, (RCS421RegVal)(currentVPN - i - 1));
         }
         head->pcb->userStackLimit = (void *)DOWN_TO_PAGE(addr);
-        TracePrintf(2, "memoryManagement: Grew user stack limiit to %p \n", head->pcb->userStackLimit);
+        TracePrintf(2, "memoryManagement: Grew user stack limit to %p \n", head->pcb->userStackLimit);
         return 1;
     } 
     else{

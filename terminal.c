@@ -92,7 +92,7 @@ isNewLineInBuffer(int term) {
     int i;
     int bufferIdx = terminalBuffers[term].read;
     for (i = 0; i < terminalBuffers[term].count; i++) {
-        TracePrintf(3, "terminals: running through buffer...: %c\n", terminalBuffers[term].buffer[bufferIdx]);
+        TracePrintf(3, "terminals: terminal %d running through buffer...: %c\n", term, terminalBuffers[term].buffer[bufferIdx]);
         if (terminalBuffers[term].buffer[bufferIdx] == '\n') {
             return 1;
         }

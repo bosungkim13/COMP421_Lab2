@@ -9,7 +9,7 @@ int main(){
 		if(i % (100 * million) == 0) printf("Idle: i = %d\n", i);
 		i++;
 	}*/
-	
+		
 	// TODO The true idle code, once we finish testing.
 	
 	while(1) Pause();
