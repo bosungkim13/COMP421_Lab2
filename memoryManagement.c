@@ -164,20 +164,23 @@ void* getPageSwapSpace(){
 
 // return 1 on success 0 on failure
 int growUserStack(ExceptionInfo *info, struct scheduleNode *head){
-    void *addr = info->addr;
-    if((DOWN_TO_PAGE(addr) < DOWN_TO_PAGE(head->pcb->userStackLimit)) && (UP_TO_PAGE(addr) > (UP_TO_PAGE(head->pcb->brk) + PAGESIZE))){
-        struct processControlBlock *pcb = head->pcb;
-        int neededPages = (DOWN_TO_PAGE(pcb->userStackLimit) - DOWN_TO_PAGE(addr)) / PAGESIZE;
-        TracePrintf(2, "memoryManagement: Entering grow_user_stack with process %d, for addr %p and need %d pages \n", pcb->pid, addr, neededPages);
+    void* addr = info->addr;
+    unsigned long targetVPN = DOWN_TO_PAGE(addr) / PAGESIZE;
+    unsigned long currentVPN = DOWN_TO_PAGE(head->pcb->userStackLimit) / PAGESIZE;
+    unsigned long brk = UP_TO_PAGE(head->pcb->brk) / PAGESIZE;
+    if((unsigned long)addr > MEM_INVALID_SIZE && (unsigned long)addr < VMEM_0_LIMIT && targetVPN < currentVPN && currentVPN > brk){
+    	int physicalPagesNeeded = currentVPN - targetVPN;
+    	if(physicalPagesNeeded > freePhysicalPageCount()){
+    		return 0;
+    	}
+        TracePrintf(2, "memoryManagement: Entering grow_user_stack with process %d, for addr %p and need %d pages \n", head->pcb->pid, addr, physicalPagesNeeded);
         int i;
-        for(i = 0; i < neededPages; i++) {
-            unsigned int ppn = getFreePhysicalPage();
-            int vpn = (long)DOWN_TO_PAGE(pcb->userStackLimit) / PAGESIZE - i - 1;
-            pcb->pageTable[vpn].valid = 1;
-            pcb->pageTable[vpn].pfn = ppn;
+        for(i = 0; i < physicalPagesNeeded; i++) {
+            head->pcb->pageTable[currentVPN - i - 1].valid = 1;
+            head->pcb->pageTable[currentVPN - i - 1].pfn = getFreePhysicalPage();
         }
-        pcb->userStackLimit = (void *)DOWN_TO_PAGE(addr);
-        TracePrintf(2, "memoryManagement: Grew user stack limiit to %p \n", pcb->userStackLimit);
+        head->pcb->userStackLimit = (void *)DOWN_TO_PAGE(addr);
+        TracePrintf(2, "memoryManagement: Grew user stack limiit to %p \n", head->pcb->userStackLimit);
         return 1;
     } 
     else{

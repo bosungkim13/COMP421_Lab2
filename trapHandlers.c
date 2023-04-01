@@ -92,6 +92,7 @@ void execTrapHandler(ExceptionInfo *info){
 	if (loadReturn == -1){
 		info->regs[0] = ERROR;
 	} else if (loadReturn == -2){
+		printf("Process %d tried exec-ing file \"%s\" and encountered a non-recoverable error. Exiting process.\n", node->pcb->pid, filename);
 		exitHandler(info, 1);
 	}
 }
@@ -158,42 +159,11 @@ void illegalTrapHandler (ExceptionInfo *info) {
 }
 
 void memoryTrapHandler (ExceptionInfo *info) {
-  /*
-  TracePrintf(1, "trapHandler: Memory handler \n");
-  if (info -> code == TRAP_MEMORY_MAPERR) {
-    TracePrintf(1, "No mapping at address... trying to grow user stack...");
-    struct scheduleNode *head = getHead();
-    void *addr = info->addr;
-    // changed to
-    if (growUserStack(info, head)){
-      return;
-    }
-    // TODO should I add an exit handler here
-    exitHandler(info, 1);
-  }
-
-  else if (info -> code == TRAP_MEMORY_ACCERR) {
-    TracePrintf(1, "Protection violation at addr %p \n", info->addr);
-    exitHandler(info, 1);
-    return;
-  }
-
-  else if (info -> code == TRAP_MEMORY_KERNEL) {
-    TracePrintf(1, "Linux kernel sent SIGSEGV at addr %p \n", info->addr);
-    exitHandler(info, 1);
-    return;
-  }
-
-  else if (info -> code == TRAP_MEMORY_USER) {
-    TracePrintf(1, "Received SIGSEGV from user");
-    exitHandler(info, 1);
-    return;
-  }
-  else { 
-    return; 
-  }
-  */
-
+	TracePrintf(1, "MemoryTrapHandler starting for process %d at address %p\n", getRunningNode()->pcb->pid, info->addr);
+	if(growUserStack(info, getRunningNode()) != 1){
+		printf("Process %d attempted to access invalid memory at %p. Exiting process.\n", getRunningNode()->pcb->pid, info->addr);
+		exitHandler(info, 1);
+	}
 }
 
 void mathTrapHandler (ExceptionInfo *info) {
@@ -303,7 +273,6 @@ ttyWriteHandler(ExceptionInfo *info) {
 }
 
 void getPidHandler(ExceptionInfo *info) {
-	// Will not be correct if idle calls getCurrentPid() since idle isn't in the list, but idle won't call
 	info->regs[0] = getCurrentPid();
 }
 
