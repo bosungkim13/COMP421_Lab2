@@ -173,7 +173,7 @@ int growUserStack(ExceptionInfo *info, struct scheduleNode *head){
     	if(physicalPagesNeeded > freePhysicalPageCount()){
     		return 0;
     	}
-        TracePrintf(2, "memoryManagement: Entering grow_user_stack with process %d, for addr %p and need %d pages \n", head->pcb->pid, addr, physicalPagesNeeded);
+        TracePrintf(2, "memoryManagement: Entering growUserStack with process %d, for addr %p and need %d pages \n", head->pcb->pid, addr, physicalPagesNeeded);
         int i;
         for(i = 0; i < physicalPagesNeeded; i++) {
             head->pcb->pageTable[currentVPN - i - 1].valid = 1;
