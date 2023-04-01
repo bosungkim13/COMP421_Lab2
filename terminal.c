@@ -34,7 +34,7 @@ writeBuffer(int term, char *buf, int len, int isScheduling) {
             currPCB->isWaitWriting = term;
 
             // context switch.
-
+            scheduleProcess(0);
             // TODO reset time and schedule the next process
 
         }
@@ -67,6 +67,7 @@ readBuffer(int term, char *buf, int len) {
         // block the process
         currPCB->isWaitReading = term;
         // context switch.
+        scheduleProcess(0);
 
     }
     // there is new line that needs to be read
