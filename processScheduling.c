@@ -44,7 +44,7 @@ int getCurrentPid(){
 int setAndCheckClockTickPID(){
 	int pidRunningNow = isIdleRunning == 1 ? idlePCB->pid : head->pcb->pid;
 	int result = (lastClockTickPID == pidRunningNow);
-	TracePrintf(1, "SetAndCheckClockTickPID: Previous tick had pid %d, now setting to pid %d, was%s the same\n",
+	TracePrintf(5, "SetAndCheckClockTickPID: Previous tick had pid %d, now setting to pid %d, was%s the same\n",
 	    lastClockTickPID, pidRunningNow, result == 1 ? "" : " not");
 	lastClockTickPID = pidRunningNow;
 	return result;
@@ -53,11 +53,11 @@ int setAndCheckClockTickPID(){
 // Returns 1 if some process had their delay decreased to 0 so could run now
 int decreaseDelay(){
 	int wasZeroed = 0;
-	TracePrintf(1, "DecreasingDelay - Starting\n");
+	TracePrintf(5, "DecreasingDelay - Starting\n");
 	struct scheduleNode* current = head;
 	while(current != NULL){
 		if (current->pcb->delay > 0){
-			TracePrintf(1, "DecreaseDelay - Process id %d had delay %d, getting decreased to %d\n",
+			TracePrintf(5, "DecreaseDelay - Process id %d had delay %d, getting decreased to %d\n",
 			    current->pcb->pid, current->pcb->delay, current->pcb->delay - 1);
 			current->pcb->delay--;
 			if(current->pcb->delay == 0) wasZeroed = 1;
@@ -203,7 +203,7 @@ void tryFreeSwitchedAwayExitingProcess(){
 
 struct processControlBlock* getWritingPCB(int term) {
 	TracePrintf(1, "processScheduling: looking for process writing to terminal %d\n", term);  
-	struct scheduleNode *current = getRunningNode();
+	struct scheduleNode *current = getHead();
 
 	while (current != NULL) {
 		TracePrintf(2, "processScheduling: current has pid of %d\n", current->pcb->pid);
@@ -223,7 +223,7 @@ int updateAndGetNextPid(){
 }
 
 void wakeUpReader(int term){
-	struct scheduleNode *currNode = getRunningNode();
+	struct scheduleNode *currNode = getHead();
 	while (currNode != NULL) {
 		struct processControlBlock *pcb = currNode->pcb;
 		if (pcb->isWaitReading == term) {
@@ -236,7 +236,7 @@ void wakeUpReader(int term){
 }
 
 void wakeUpWriter(int term){
-	struct scheduleNode *currNode = getRunningNode();
+	struct scheduleNode *currNode = getHead();
 	while (currNode != NULL) {
 		struct processControlBlock *pcb = currNode->pcb;
 		if (pcb->isWaitWriting == term) {

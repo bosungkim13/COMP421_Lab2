@@ -6,8 +6,8 @@ int main(){
 	int i = 0;
 	int million = 1000000;
 	while(1){
-		if(i % (100 * million) == 0) printf("Idle: i = %d\n", i);
-		i++;
+		//if(i % (100 * million) == 0) printf("Idle: i = %d\n", i);
+		//i++;
 	}
 	
 	// TODO The true idle code, once we finish testing.

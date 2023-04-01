@@ -60,7 +60,7 @@ int main() {
 	}
 	while(testWait());
 	testExit(GetPid());*/
-	
+	/*
 	int i = 0;
 	for(; i < 100; i++){
 		int j = 0;
@@ -83,11 +83,11 @@ int main() {
 			}
 		}
 		while(testWait());
-	}
+	}*/
 
 	
 	// TODO The true contents of init, once we're done testing.
-	//while(1) Pause();
+	while(1) Pause();
 	
 	return 0;
 }
